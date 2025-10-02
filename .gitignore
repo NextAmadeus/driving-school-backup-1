@@ -1,0 +1,31 @@
+# 백업 폴더
+backup/
+backup_*/
+
+# 임시 파일
+temp/
+*.tmp
+*.log
+
+# 시스템 파일
+.DS_Store
+Thumbs.db
+
+# IDE 파일
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 환경 설정 파일 (보안상 민감한 정보)
+.env
+config.local.php
+
+# 로그 파일
+*.log
+logs/
+
+# 캐시 파일
+cache/
+*.cache
+

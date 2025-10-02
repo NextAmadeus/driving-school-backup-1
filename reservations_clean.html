@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 관리 - 깔끔한 버전</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        .calendar-container {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 0;
+            height: 700px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .calendar-header {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 0;
+            background: var(--panel);
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .calendar-body {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 0;
+            height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .calendar-body::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .time-slot, .reservation-slot {
+            height: 50px;
+            min-height: 50px;
+            max-height: 50px;
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--muted);
+            position: relative;
+            box-sizing: border-box;
+        }
+        
+        .time-slot {
+            background: var(--panel-2);
+            font-weight: 600;
+        }
+        
+        .reservation-slot {
+            background: var(--panel);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .reservation-slot:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .reservation-slot.selected {
+            background: rgba(59, 130, 246, 0.3) !important;
+            border: 2px solid #3b82f6 !important;
+        }
+        
+        .reservation-temp {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            background: rgba(59, 130, 246, 0.5);
+            border: 1px solid #3b82f6;
+            border-radius: 4px;
+            z-index: 10;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .reservation-block {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            z-index: 5;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        
+        .reservation-blue { background: #3b82f6; }
+        .reservation-green { background: #10b981; }
+        .reservation-red { background: #ef4444; }
+        .reservation-yellow { background: #f59e0b; }
+        .reservation-purple { background: #8b5cf6; }
+        
+        .color-palette {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .color-palette.show {
+            display: block;
+        }
+        
+        .color-options {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-option.selected {
+            border-color: white;
+            transform: scale(1.1);
+        }
+        
+        .time-indicator {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <button class="burger" aria-label="메뉴 열기">
+                    <span></span><span></span><span></span>
+                </button>
+                <div class="brand__name">고수의 운전면허</div>
+                <div class="brand__role">응암역점</div>
+            </div>
+            <nav class="nav">
+                <a class="nav__item" href="index.html">Dashboard</a>
+                <div class="nav__section">관리자등록</div>
+                <button class="nav__item nav__parent" type="button">회원관리</button>
+                <div class="nav__children">
+                    <a class="nav__child" href="index.html">회원 현황</a>
+                    <a class="nav__child" href="#">회원 임시 보관함</a>
+                </div>
+                <button class="nav__item nav__parent active" type="button">예약관리</button>
+                <div class="nav__children">
+                    <a class="nav__child active" href="reservations_clean.html">예약 현황</a>
+                </div>
+                <button class="nav__item nav__parent" type="button">상품관리</button>
+                <button class="nav__item nav__parent" type="button">통계 보기</button>
+                <button class="nav__item nav__parent" type="button">지점관리</button>
+                <button class="nav__item nav__parent" type="button">게시판</button>
+                <button class="nav__item nav__parent" type="button">약관 관리</button>
+                <button class="nav__item nav__parent" type="button">마케팅용 SMS작성</button>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div class="topbar__title">예약 관리</div>
+                <div class="topbar__meta">예약을 생성하고 관리할 수 있습니다.</div>
+                <div class="topbar__spacer"></div>
+                <div class="user">
+                    <div class="user__avatar" aria-hidden="true">관리자</div>
+                    <button class="btn btn--ghost" onclick="logout()" style="margin-left: 8px; font-size: 12px;">로그아웃</button>
+                </div>
+            </header>
+
+            <section class="content">
+                <div class="reservation-header">
+                    <h2>예약 현황</h2>
+                    <p>1. 셀을 클릭하여 시작 시간을 선택하세요</p>
+                    <p>2. 아래로 드래그하여 종료 시간을 선택하세요</p>
+                </div>
+
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div class="time-slot"></div>
+                        <div class="time-slot">월</div>
+                        <div class="time-slot">화</div>
+                        <div class="time-slot">수</div>
+                        <div class="time-slot">목</div>
+                        <div class="time-slot">금</div>
+                        <div class="time-slot">토</div>
+                        <div class="time-slot">일</div>
+                    </div>
+                    
+                    <div class="calendar-body" id="calendarBody">
+                        <!-- 동적으로 생성될 시간 슬롯들 -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 색상 팔레트 -->
+    <div class="color-palette" id="colorPalette">
+        <div class="color-options">
+            <div class="color-option reservation-blue" data-color="blue"></div>
+            <div class="color-option reservation-green" data-color="green"></div>
+            <div class="color-option reservation-red" data-color="red"></div>
+            <div class="color-option reservation-yellow" data-color="yellow"></div>
+            <div class="color-option reservation-purple" data-color="purple"></div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let selectedColorType = 'blue';
+        let selectedStartTime = null;
+        let selectedStartSlot = null;
+        let isInDragMode = false;
+        
+        // 전역 시간 슬롯 배열
+        const timeSlots = [
+            '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00',
+            '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+            '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00',
+            '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30',
+            '23:00', '23:30', '24:00'
+        ];
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCalendar();
+            initializeColorPalette();
+            initializeDragEvents();
+        });
+
+        // 캘린더 초기화
+        function initializeCalendar() {
+            const calendarBody = document.getElementById('calendarBody');
+            
+            timeSlots.forEach((time, timeIndex) => {
+                // 시간 슬롯
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = time;
+                calendarBody.appendChild(timeSlot);
+
+                // 각 요일별 예약 슬롯
+                for (let day = 1; day <= 7; day++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'reservation-slot';
+                    calendarBody.appendChild(slot);
+                }
+            });
+        }
+
+        // 색상 팔레트 초기화
+        function initializeColorPalette() {
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedColorType = this.getAttribute('data-color');
+                    console.log('색상 선택:', selectedColorType);
+                });
+            });
+            
+            // 첫 번째 색상 기본 선택
+            colorOptions[0].classList.add('selected');
+        }
+
+        // 새로운 클릭 → 드래그 메커니즘
+        function initializeDragEvents() {
+            const calendarBody = document.getElementById('calendarBody');
+            
+            // 1단계: 셀 클릭으로 시작 시간 선택
+            calendarBody.addEventListener('click', function(e) {
+                const slot = e.target.closest('.reservation-slot');
+                if (slot && !isInDragMode) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // 클릭한 슬롯의 정확한 시간 계산
+                    const calendarRect = calendarBody.getBoundingClientRect();
+                    const slotRect = slot.getBoundingClientRect();
+                    const relativeY = slotRect.top - calendarRect.top + calendarBody.scrollTop;
+                    const slotHeight = 50;
+                    const timeIndex = Math.floor(relativeY / slotHeight);
+                    
+                    selectedStartTime = timeIndex;
+                    selectedStartSlot = slot;
+                    isInDragMode = true;
+                    
+                    console.log('시작 시간 선택:', {
+                        timeIndex: timeIndex,
+                        timeText: timeSlots[timeIndex] || 'unknown',
+                        slot: slot
+                    });
+                    
+                    // 시각적 피드백 (선택된 셀 하이라이트)
+                    slot.classList.add('selected');
+                    
+                    // 색상 팔레트 표시
+                    const colorPalette = document.getElementById('colorPalette');
+                    colorPalette.classList.add('show');
+                    
+                    // 시간 표시기 생성
+                    createTimeIndicator();
+                    updateTimeIndicator(e.clientY);
+                }
+            });
+            
+            // 2단계: 마우스 이동으로 종료 시간 선택
+            calendarBody.addEventListener('mousemove', function(e) {
+                if (isInDragMode && selectedStartTime !== null) {
+                    const calendarRect = calendarBody.getBoundingClientRect();
+                    const relativeY = e.clientY - calendarRect.top + calendarBody.scrollTop;
+                    const slotHeight = 50;
+                    const timeIndex = Math.floor(relativeY / slotHeight);
+                    
+                    // 시작 시간보다 아래로만 가능
+                    const endTime = Math.max(selectedStartTime, timeIndex);
+                    
+                    console.log('종료 시간 선택:', {
+                        startTime: selectedStartTime,
+                        endTime: endTime,
+                        startTimeText: timeSlots[selectedStartTime] || 'unknown',
+                        endTimeText: timeSlots[endTime] || 'unknown'
+                    });
+                    
+                    // 시간 표시기 업데이트
+                    updateTimeIndicator(e.clientY);
+                    
+                    // 임시 예약 블록 표시
+                    updateTempReservation(selectedStartTime, endTime);
+                }
+            });
+            
+            // 3단계: 마우스 업으로 예약 생성
+            calendarBody.addEventListener('mouseup', function(e) {
+                if (isInDragMode && selectedStartTime !== null) {
+                    const calendarRect = calendarBody.getBoundingClientRect();
+                    const relativeY = e.clientY - calendarRect.top + calendarBody.scrollTop;
+                    const slotHeight = 50;
+                    const timeIndex = Math.floor(relativeY / slotHeight);
+                    const endTime = Math.max(selectedStartTime, timeIndex);
+                    
+                    // 예약 생성 (최소 1시간)
+                    if (endTime > selectedStartTime) {
+                        createReservation(selectedStartTime, endTime);
+                    }
+                    
+                    // 정리
+                    cleanupSelection();
+                }
+            });
+            
+            // ESC 키로 선택 취소
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isInDragMode) {
+                    cleanupSelection();
+                }
+            });
+        }
+
+        // 선택 정리 함수
+        function cleanupSelection() {
+            if (selectedStartSlot) {
+                selectedStartSlot.classList.remove('selected');
+            }
+            
+            const colorPalette = document.getElementById('colorPalette');
+            colorPalette.classList.remove('show');
+            
+            const timeIndicator = document.getElementById('timeIndicator');
+            if (timeIndicator) {
+                timeIndicator.remove();
+            }
+            
+            const tempReservation = document.querySelector('.reservation-temp');
+            if (tempReservation) {
+                tempReservation.remove();
+            }
+            
+            selectedStartTime = null;
+            selectedStartSlot = null;
+            isInDragMode = false;
+            
+            console.log('선택 정리 완료');
+        }
+
+        // 임시 예약 블록 업데이트
+        function updateTempReservation(startTime, endTime) {
+            // 기존 임시 블록 제거
+            const existingTemp = document.querySelector('.reservation-temp');
+            if (existingTemp) {
+                existingTemp.remove();
+            }
+            
+            if (selectedStartSlot && endTime > startTime) {
+                const duration = endTime - startTime;
+                const block = document.createElement('div');
+                block.className = 'reservation-temp';
+                block.style.position = 'absolute';
+                block.style.left = '2px';
+                block.style.right = '2px';
+                block.style.top = (startTime * 50) + 'px';
+                block.style.height = (duration * 50) + 'px';
+                block.style.backgroundColor = 'rgba(59, 130, 246, 0.5)';
+                block.style.border = '1px solid #3b82f6';
+                block.style.borderRadius = '4px';
+                block.style.zIndex = '10';
+                block.textContent = '새 예약';
+                block.style.color = 'white';
+                block.style.display = 'flex';
+                block.style.alignItems = 'center';
+                block.style.justifyContent = 'center';
+                block.style.fontSize = '12px';
+                block.style.fontWeight = 'bold';
+                
+                selectedStartSlot.parentNode.appendChild(block);
+            }
+        }
+
+        // 실제 예약 생성
+        function createReservation(startTime, endTime) {
+            if (selectedColorType) {
+                const block = document.createElement('div');
+                block.className = `reservation-block reservation-${selectedColorType}`;
+                block.style.position = 'absolute';
+                block.style.left = '2px';
+                block.style.right = '2px';
+                block.style.top = (startTime * 50) + 'px';
+                block.style.height = ((endTime - startTime) * 50) + 'px';
+                block.style.zIndex = '5';
+                block.textContent = '새 예약';
+                block.style.color = 'white';
+                block.style.display = 'flex';
+                block.style.alignItems = 'center';
+                block.style.justifyContent = 'center';
+                block.style.fontSize = '12px';
+                block.style.fontWeight = 'bold';
+                block.style.borderRadius = '4px';
+                
+                selectedStartSlot.parentNode.appendChild(block);
+                
+                console.log('예약 생성 완료:', {
+                    startTime: startTime,
+                    endTime: endTime,
+                    startTimeText: timeSlots[startTime] || 'unknown',
+                    endTimeText: timeSlots[endTime] || 'unknown',
+                    duration: endTime - startTime
+                });
+            }
+        }
+
+        // 시간 표시기 생성
+        function createTimeIndicator() {
+            const timeIndicator = document.createElement('div');
+            timeIndicator.id = 'timeIndicator';
+            timeIndicator.className = 'time-indicator';
+            document.body.appendChild(timeIndicator);
+        }
+
+        // 시간 표시기 업데이트
+        function updateTimeIndicator(y) {
+            const timeIndicator = document.getElementById('timeIndicator');
+            if (timeIndicator) {
+                timeIndicator.style.left = y + 'px';
+                timeIndicator.style.top = (y - 30) + 'px';
+                
+                const calendarBody = document.getElementById('calendarBody');
+                const calendarRect = calendarBody.getBoundingClientRect();
+                const relativeY = y - calendarRect.top + calendarBody.scrollTop;
+                const slotHeight = 50;
+                const timeIndex = Math.floor(relativeY / slotHeight);
+                
+                if (timeIndex >= 0 && timeIndex < timeSlots.length) {
+                    const currentTime = timeSlots[timeIndex];
+                    const endTime = timeSlots[timeIndex + 1] || '24:00';
+                    timeIndicator.textContent = `${currentTime} - ${endTime}`;
+                }
+            }
+        }
+
+        // 로그아웃 기능
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

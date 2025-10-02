@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로컬 테스트</title>
+</head>
+<body>
+    <h1>로컬 API 테스트</h1>
+    <button onclick="testAPI()">테스트 실행</button>
+    <div id="result"></div>
+
+    <script>
+        function testAPI() {
+            // 39개 필드 모두 포함한 테스트 데이터
+            const testData = {
+                branch: '응암역점',
+                name: '테스트회원',
+                gender: 'male',
+                birthYear: 1990,
+                birthMonth: 5,
+                birthDay: 15,
+                address: '서울특별시 강남구',
+                detailAddress: '테헤란로 123',
+                phone: '010-1234-5678',
+                noPhone: false,
+                receptionDate: '2024-12-25',
+                productName: '3개월 무제한',
+                productPrice: 500000,
+                productPeriod: 3,
+                productHours: 0,
+                paymentType: 'card',
+                discountName: '신규할인',
+                discountRate: 10.5,
+                finalAmount: 447500,
+                unpaid: false,
+                otherPayment: '포인트',
+                visitPaths: ['지인추천', '포털검색', 'SNS홍보'],
+                practiceMethod: 'first',
+                practiceMemo: '처음 운전을 배웁니다',
+                indoorTestDate: '2025-01-15',
+                roadTestDate: '2025-02-15',
+                testCenter: '강남운전면허시험장',
+                preConsultation: true,
+                writtenPass: false,
+                functionPass: false,
+                drivingPass: false,
+                finalPass: false,
+                refunded: false,
+                expired: false,
+                termsAgreed: true,
+                termsContent: '회원 약관에 동의합니다',
+                generalMemo: '특별한 요청사항 없음',
+                educationMemos: ['첫 수업 메모', '두 번째 수업 메모', '시험 준비 메모']
+            };
+
+            console.log('전송할 데이터:', testData);
+            console.log('데이터 필드 수:', Object.keys(testData).length);
+
+            // 로컬 API 테스트
+            fetch('api/members_complete_final.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('응답:', data);
+                document.getElementById('result').innerHTML = 
+                    '<h3>응답 결과:</h3>' +
+                    '<p>성공: ' + data.success + '</p>' +
+                    '<p>메시지: ' + data.message + '</p>' +
+                    '<p>저장된 필드: ' + data.savedFields + '</p>' +
+                    '<p>회원 ID: ' + data.memberId + '</p>';
+            })
+            .catch(error => {
+                console.error('오류:', error);
+                document.getElementById('result').innerHTML = 
+                    '<h3>오류 발생:</h3><p>' + error.message + '</p>';
+            });
+        }
+    </script>
+</body>
+</html>

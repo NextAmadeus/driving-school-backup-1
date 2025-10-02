@@ -1,0 +1,56 @@
+# 최종 테스트용 cURL 명령어
+
+# 1. 서버 상태 확인
+curl -X GET "https://induck1111.dothome.co.kr/api/test.php"
+
+# 2. 완전한 회원 등록 테스트 (39개 필드)
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "홍길동",
+    "gender": "male",
+    "birth_year": 1990,
+    "birth_month": 5,
+    "birth_day": 15,
+    "address": "서울특별시 강남구",
+    "detail_address": "테헤란로 123",
+    "phone": "010-1234-5678",
+    "no_phone": false,
+    "reception_date": "2024-12-25",
+    "product_name": "3개월 무제한",
+    "product_price": 500000,
+    "product_period": 3,
+    "product_hours": 0,
+    "payment_type": "card",
+    "discount_name": "신규할인",
+    "discount_rate": 10.5,
+    "final_amount": 447500,
+    "unpaid": false,
+    "other_payment": "포인트",
+    "visit_paths": ["지인추천", "포털검색", "SNS홍보"],
+    "practice_method": "first",
+    "practice_memo": "처음 운전을 배웁니다",
+    "indoor_test_date": "2025-01-15",
+    "road_test_date": "2025-02-15",
+    "test_center": "강남운전면허시험장",
+    "pre_consultation": true,
+    "written_pass": false,
+    "function_pass": false,
+    "driving_pass": false,
+    "final_pass": false,
+    "refunded": false,
+    "expired": false,
+    "terms_agreed": true,
+    "terms_content": "회원 약관에 동의합니다",
+    "general_memo": "특별한 요청사항 없음",
+    "education_memos": ["첫 수업 메모", "두 번째 수업 메모", "시험 준비 메모"]
+  }'
+
+# 3. 최소 필수 정보만으로 테스트
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "김철수",
+    "gender": "female",
+    "phone": "010-9876-5432"
+  }'

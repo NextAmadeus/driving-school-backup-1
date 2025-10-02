@@ -1,0 +1,121 @@
+# 회원 등록 API 테스트용 cURL 명령어
+
+# 1. 기본 테스트 (GET 요청)
+curl -X GET "https://induck1111.dothome.co.kr/api/test.php"
+
+# 2. 완전한 회원 등록 테스트 (JSON)
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "홍길동",
+    "gender": "male",
+    "birth_year": 1990,
+    "birth_month": 5,
+    "birth_day": 15,
+    "address": "서울특별시 강남구",
+    "detail_address": "테헤란로 123",
+    "phone": "010-1234-5678",
+    "no_phone": false,
+    "reception_date": "2024-12-25",
+    "product_name": "3개월 무제한",
+    "product_price": 500000,
+    "product_period": 3,
+    "product_hours": 0,
+    "payment_type": "card",
+    "discount_name": "신규할인",
+    "discount_rate": 10.5,
+    "final_amount": 447500,
+    "unpaid": false,
+    "other_payment": "포인트",
+    "visit_paths": ["지인추천", "포털검색", "SNS홍보"],
+    "practice_method": "first",
+    "practice_memo": "처음 운전을 배웁니다",
+    "indoor_test_date": "2025-01-15",
+    "road_test_date": "2025-02-15",
+    "test_center": "강남운전면허시험장",
+    "pre_consultation": true,
+    "written_pass": false,
+    "function_pass": false,
+    "driving_pass": false,
+    "final_pass": false,
+    "refunded": false,
+    "expired": false,
+    "terms_agreed": true,
+    "terms_content": "회원 약관에 동의합니다",
+    "general_memo": "특별한 요청사항 없음",
+    "education_memos": ["첫 수업 메모", "두 번째 수업 메모", "시험 준비 메모"]
+  }'
+
+# 3. 최소 필수 정보만으로 테스트
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "김철수",
+    "gender": "female",
+    "phone": "010-9876-5432"
+  }'
+
+# 4. Form-data로 테스트
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "name=이영희&gender=female&phone=010-5555-6666&product_name=시간제&product_price=100000&payment_type=cash&visit_paths=지인추천,포털검색&practice_method=other&pre_consultation=1&written_pass=0&terms_agreed=1"
+
+# 5. BOOLEAN 값 다양한 형식 테스트
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "박민수",
+    "gender": "male",
+    "phone": "010-7777-8888",
+    "no_phone": "false",
+    "unpaid": "true",
+    "pre_consultation": 1,
+    "written_pass": "0",
+    "function_pass": "yes",
+    "driving_pass": "no",
+    "final_pass": "on",
+    "refunded": "off",
+    "expired": true,
+    "terms_agreed": false
+  }'
+
+# 6. JSON 컬럼 테스트
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "정수진",
+    "gender": "female",
+    "phone": "010-3333-4444",
+    "visit_paths": ["지인추천", "블로그", "유튜브 영상"],
+    "education_memos": ["첫 수업: 기본 조작법", "두 번째: 주차 연습", "세 번째: 고속도로 주행"]
+  }'
+
+# 7. 날짜 형식 테스트
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "최영호",
+    "gender": "male",
+    "phone": "010-1111-2222",
+    "reception_date": "2024-12-25",
+    "indoor_test_date": "2025-01-15 09:00:00",
+    "road_test_date": "2025-02-15 14:30:00"
+  }'
+
+# 8. 에러 테스트 (이름 없음)
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gender": "male",
+    "phone": "010-9999-0000"
+  }'
+
+# 9. 잘못된 JSON 테스트
+curl -X POST "https://induck1111.dothome.co.kr/api/test.php" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "오류테스트",
+    "gender": "male",
+    "phone": "010-0000-1111"
+    // 잘못된 JSON 구문
+  }'

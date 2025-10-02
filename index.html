@@ -1,0 +1,3487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>퍼펙트운전면허 - 관리자 | 회원 관리</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css?v=20241225">
+    <style>
+        .pagination {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pagination .btn {
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand__name">퍼펙트운전면허</div>
+                <div class="brand__role">응암역점</div>
+            </div>
+            <nav class="nav">
+                <a class="nav__item active" href="index.html">회원 현황</a>
+                <a class="nav__item" href="reservations.html">예약 현황</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div class="topbar__title">회원 관리</div>
+                <div class="topbar__spacer"></div>
+                <div class="user">
+                    <button class="btn btn--ghost" onclick="logout()" style="font-size: 12px;">로그아웃</button>
+                </div>
+            </header>
+
+            <section class="content">
+                <div class="filters card">
+                    <div class="filters__row">
+                        <div class="selects">
+                            <select id="productFilter">
+                                <option value="">전체상품</option>
+                                <option value="1개월 22시간">1개월 22시간</option>
+                                <option value="마지막 테스트">마지막 테스트</option>
+                            </select>
+                            <input type="text" placeholder="이름, 전화번호, 상품명으로 검색" id="searchInput" />
+                            <button class="btn btn--primary" onclick="searchMembers()">검색</button>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn--danger">선택 삭제</button>
+                            <button class="btn btn--ghost btn--add-member">+</button>
+                        </div>
+                    </div>
+                    <div class="filters__row filters__row--chips">
+                        <button class="btn btn--ghost btn--small" onclick="resetFilters()">선택 초기화</button>
+                        <label class="chip"><input type="radio" name="status" value="미합격"> 미합격</label>
+                        <label class="chip"><input type="radio" name="status" value="필기합격"> 필기합격</label>
+                        <label class="chip"><input type="radio" name="status" value="기능합격"> 기능합격</label>
+                        <label class="chip"><input type="radio" name="status" value="최종합격"> 최종합격</label>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="table__scroll">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;"><input type="checkbox" id="selectAllCheckbox" aria-label="전체 선택"></th>
+                                    <th>이름</th>
+                                    <th>연락처</th>
+                                    <th>상품</th>
+                                    <th>잔여시간</th>
+                                    <th>시험예정일</th>
+                                    <th>최종합격여부</th>
+                                    <th>추가 알림</th>
+                                    <th>가입일자</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersTableBody">
+                                <!-- 동적으로 로드될 회원 데이터가 여기에 표시됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table__footer">
+                        <div class="pagination" id="pagination">
+                            <!-- 동적으로 생성됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 회원 등록 모달 -->
+    <div id="memberModal" class="modal" style="display: none;">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2>회원 등록</h2>
+                <p>회원의 정보를 정확하게 입력해주세요</p>
+                <button class="modal__close" type="button" aria-label="닫기">&times;</button>
+            </div>
+            
+            <div class="modal__body">
+                <form class="member-form">
+                    <!-- 기본 정보 섹션 -->
+                    <div class="form-row">
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>지점</label>
+                                <input type="text" class="form-control" value="응암역점" disabled>
+                            </div>
+                        </div>
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>이름</label>
+                                <input type="text" class="form-control" placeholder="이름을 입력해주세요">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>성별<span class="required">(필수)</span></label>
+                                <div class="radio-group">
+                                    <label class="radio-item">
+                                        <input type="radio" name="gender" value="male" checked>
+                                        <span>남자</span>
+                                    </label>
+                                    <label class="radio-item">
+                                        <input type="radio" name="gender" value="female">
+                                        <span>여자</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>생년월일<span class="required">(필수)</span></label>
+                                <div class="date-group">
+                                    <select class="form-control" id="birthYear">
+                                        <option value="">년</option>
+                                    </select>
+                                    <select class="form-control" id="birthMonth">
+                                        <option value="">월</option>
+                                    </select>
+                                    <select class="form-control" id="birthDay">
+                                        <option value="">일</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>주소</label>
+                                <input type="text" class="form-control" placeholder="주소를 입력해주세요">
+                            </div>
+                        </div>
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>상세주소</label>
+                                <input type="text" class="form-control" placeholder="상세주소를 입력해주세요">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>연락처</label>
+                                <div class="contact-group">
+                                    <input type="text" class="form-control" value="01012341234">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">연락처 없음</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 상품/결제형태 섹션 -->
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-col-6">
+                                <label>상품/결제형태</label>
+                                <div class="form-row">
+                                    <div class="form-col-8">
+                                        <select class="form-control" id="productSelect">
+                                            <option value="">상품을 선택하세요</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-col-4">
+                                        <div class="button-group-small">
+                                            <button type="button" class="btn btn--add-small" id="addProductBtn" title="상품 추가">+</button>
+                                            <button type="button" class="btn btn--remove-small" id="removeProductBtn" title="상품 삭제">-</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-col-6">
+                                <label>결제 형태</label>
+                                <select class="form-control" id="paymentTypeSelect">
+                                    <option value="">결제 형태를 선택해주세요</option>
+                                    <option value="card">카드</option>
+                                    <option value="cash">현금</option>
+                                    <option value="bank">무통장 입금</option>
+                                    <option value="other">기타</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col-6">
+                                <label>할인 선택</label>
+                                <div class="form-row">
+                                    <div class="form-col-8">
+                                        <select class="form-control" id="discountSelect">
+                                            <option value="">할인을 선택하세요</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-col-4">
+                                        <div class="button-group-small">
+                                            <button type="button" class="btn btn--add-small" id="addDiscountBtn" title="할인 추가">+</button>
+                                            <button type="button" class="btn btn--remove-small" id="removeDiscountBtn" title="할인 삭제">-</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-col-6">
+                                <label>접수일</label>
+                                <input type="date" class="form-control" id="paymentDate" value="2025-09-25">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col-12">
+                                <div class="payment-row">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input" checked>
+                                        <span class="form-check-label">미납 여부</span>
+                                    </label>
+                                    <span class="amount">0원</span>
+                                    <button type="button" class="btn btn--payment">결제</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 기타결제 -->
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-col-6">
+                                <label>기타결제</label>
+                                <select class="form-control" id="otherPaymentSelect">
+                                    <option value="">선택하세요</option>
+                                </select>
+                            </div>
+                            <div class="form-col-6">
+                                <label>&nbsp;</label>
+                                <div class="button-group">
+                                    <button type="button" class="btn btn--add" id="addPaymentListBtn" title="목록 추가">+</button>
+                                    <button type="button" class="btn btn--remove" id="removePaymentListBtn" title="목록 삭제">-</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 방문경로 섹션 -->
+                    <div class="form-group">
+                        <label>방문경로<span class="required">(필수)</span></label>
+                        <div class="checkbox-grid">
+                            <div class="form-row">
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">지인추천</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">포털검색</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">기타</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">블로그</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">지나가다가(간판)</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">전단지</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">SNS홍보</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">유튜브 영상</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">족자 게시물</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">네이버예약</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">바닥스티커</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">현수막 광고</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">당근마켓 광고</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">서울성장드림바우처</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">청년수당</span>
+                                    </label>
+                                </div>
+                                <div class="form-col-3">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input">
+                                        <span class="form-check-label">알 수 없음</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 연습방법 섹션 -->
+                    <div class="form-group">
+                        <label>지금까지 연습방법</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="practice" value="first">
+                                <span>처음</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="practice" value="self">
+                                <span>독학/가족</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="practice" value="other">
+                                <span>타 학원</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="practice" value="etc">
+                                <span>기타</span>
+                            </label>
+                        </div>
+                        <input type="text" class="form-control" placeholder="타 학원 또는 기타 사항을 메모해두세요">
+                    </div>
+                    
+                    <!-- 시험응시 예정/일자 섹션 -->
+                    <div class="form-group">
+                        <label>시험응시 예정/일자</label>
+                        <div class="form-row">
+                            <div class="form-col-6">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="indoorTestCheck">
+                                    <span class="form-check-label">장내기능 시험</span>
+                                </label>
+                                <div class="form-row">
+                                    <div class="form-col-12">
+                                        <input type="date" class="form-control" id="indoorTestDate" placeholder="날짜지정">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-col-6">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="roadTestCheck">
+                                    <span class="form-check-label">도로주행 시험</span>
+                                </label>
+                                <div class="form-row">
+                                    <div class="form-col-12">
+                                        <input type="date" class="form-control" id="roadTestDate" placeholder="날짜지정">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 응시 예정 시험장 -->
+                    <div class="form-group">
+                        <label>응시 예정 시험장</label>
+                        <input type="text" class="form-control" placeholder="시험장을 입력해주세요">
+                    </div>
+                    
+                    
+                    <!-- 사전상담여부 -->
+                    <div class="form-group">
+                        <label>사전상담여부</label>
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" id="preConsultation">
+                            <span class="form-check-label">진행</span>
+                        </label>
+                    </div>
+                    
+                    <!-- 시험합격여부 -->
+                    <div class="form-group">
+                        <label>시험합격여부</label>
+                        <div class="checkbox-group">
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="writtenPass">
+                                <span class="form-check-label">필기합격</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="functionPass">
+                                <span class="form-check-label">기능합격</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="drivingPass">
+                                <span class="form-check-label">주행합격</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="finalPass">
+                                <span class="form-check-label">최종합격</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 회원상태 -->
+                    <div class="form-group">
+                        <label>회원상태</label>
+                        <div class="checkbox-group">
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="refunded">
+                                <span class="form-check-label">환불함</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="expired">
+                                <span class="form-check-label">기간만료</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 약관 동의 -->
+                    <div class="form-group">
+                        <label>약관 설명 및 동의</label>
+                        <div class="agreement-group">
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="termsAgreed">
+                                <span class="form-check-label">약관 설명 및 동의하였습니다.</span>
+                            </label>
+                            <div class="agreement-buttons">
+                                <a href="#" class="link" id="termsViewLink">[약관보기]</a>
+                                <button type="button" class="btn btn--add-small" id="addTermsBtn" title="약관 작성">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- 기타 메모 -->
+                    <div class="form-group">
+                        <label>기타 메모</label>
+                        <textarea class="form-control" placeholder="메모를 입력해주세요." rows="4" id="generalMemo"></textarea>
+                    </div>
+                    
+                    <!-- 교육 및 메모사항 -->
+                    <div class="form-group">
+                        <label>교육 및 메모사항</label>
+                        <button type="button" class="btn btn--add" id="addMemoBtn">+</button>
+                        <div id="memoContainer">
+                            <!-- 동적으로 추가될 메모 항목들이 여기에 들어갑니다 -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal__footer">
+                <button type="button" class="btn btn--cancel">취소</button>
+                <button type="button" class="btn btn--complete" onclick="submitMemberForm()">완료</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 약관 작성 모달 -->
+    <div id="termsModal" class="modal" style="display: none;">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2>약관 작성</h2>
+                <p>회원 약관을 작성해주세요</p>
+                <button class="modal__close" type="button" aria-label="닫기">&times;</button>
+            </div>
+            
+            <div class="modal__body">
+                <div class="form-group">
+                    <label>약관 제목</label>
+                    <input type="text" class="form-control" id="termsTitle" placeholder="약관 제목을 입력해주세요">
+                </div>
+                
+                <div class="form-group">
+                    <label>약관 내용</label>
+                    <textarea class="form-control" id="termsContent" placeholder="약관 내용을 입력해주세요" rows="20"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>생성일</label>
+                    <input type="date" class="form-control" id="termsDate">
+                </div>
+            </div>
+            
+            <div class="modal__footer">
+                <button type="button" class="btn btn--cancel" id="termsCancelBtn">취소</button>
+                <button type="button" class="btn btn--complete" id="termsSaveBtn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 약관 보기 모달 -->
+    <div id="termsViewModal" class="modal" style="display: none;">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2>저장된 약관</h2>
+                <p>등록된 약관 목록입니다</p>
+                <button class="modal__close" type="button" aria-label="닫기">&times;</button>
+            </div>
+            
+            <div class="modal__body">
+                <div id="termsList">
+                    <div class="no-terms" style="text-align: center; padding: 40px; color: #6b7280;">
+                        <p>저장된 약관이 없습니다.</p>
+                        <p>먼저 약관을 작성해주세요.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal__footer">
+                <button type="button" class="btn btn--cancel" id="termsViewCloseBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회원 정보 수정 모달 -->
+    <div id="memberEditModal" class="modal" style="display: none;">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2>회원 정보</h2>
+                <p id="memberEditName">회원 정보를 불러오는 중...</p>
+                <button class="modal__close" type="button" aria-label="닫기">&times;</button>
+            </div>
+            
+            <div class="modal__body">
+                <form class="member-form" id="memberEditForm">
+                    <!-- 기본 정보 섹션 -->
+                    <div class="form-row">
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>지점</label>
+                                <input type="text" class="form-control" id="editBranch" value="응암역점" disabled>
+                            </div>
+                        </div>
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>이름</label>
+                                <input type="text" class="form-control" id="editName" placeholder="이름을 입력해주세요">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>성별<span class="required">(필수)</span></label>
+                                <div class="radio-group">
+                                    <label class="radio-item">
+                                        <input type="radio" name="editGender" value="male" id="editGenderMale">
+                                        <span>남자</span>
+                                    </label>
+                                    <label class="radio-item">
+                                        <input type="radio" name="editGender" value="female" id="editGenderFemale">
+                                        <span>여자</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>생년월일<span class="required">(필수)</span></label>
+                                <div class="date-group">
+                                    <select class="form-control" id="editBirthYear">
+                                        <option value="">년</option>
+                                    </select>
+                                    <select class="form-control" id="editBirthMonth">
+                                        <option value="">월</option>
+                                    </select>
+                                    <select class="form-control" id="editBirthDay">
+                                        <option value="">일</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>주소</label>
+                                <input type="text" class="form-control" id="editAddress" placeholder="주소를 입력해주세요">
+                            </div>
+                        </div>
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>상세주소</label>
+                                <input type="text" class="form-control" id="editDetailAddress" placeholder="상세주소를 입력해주세요">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col-6">
+                            <div class="form-group">
+                                <label>연락처</label>
+                                <div class="contact-group">
+                                    <input type="text" class="form-control" id="editPhone" value="01012341234">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="editNoPhone">
+                                        <span class="form-check-label">연락처 없음</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 상품/결제형태 섹션 -->
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-col-6">
+                                <label>상품/결제형태</label>
+                                <div class="form-row">
+                                    <div class="form-col-8">
+                                        <select class="form-control" id="editProductSelect">
+                                            <option value="">상품을 선택하세요</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-col-4">
+                                        <div class="button-group-small">
+                                            <button type="button" class="btn btn--add-small" id="editAddProductBtn" title="상품 추가">+</button>
+                                            <button type="button" class="btn btn--remove-small" id="editRemoveProductBtn" title="상품 삭제">-</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-col-6">
+                                <label>결제 형태</label>
+                                <select class="form-control" id="editPaymentTypeSelect">
+                                    <option value="">결제 형태를 선택해주세요</option>
+                                    <option value="card">카드</option>
+                                    <option value="cash">현금</option>
+                                    <option value="bank">무통장 입금</option>
+                                    <option value="other">기타</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col-6">
+                                <label>할인 선택</label>
+                                <div class="form-row">
+                                    <div class="form-col-8">
+                                        <select class="form-control" id="editDiscountSelect">
+                                            <option value="">할인을 선택하세요</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-col-4">
+                                        <div class="button-group-small">
+                                            <button type="button" class="btn btn--add-small" id="editAddDiscountBtn" title="할인 추가">+</button>
+                                            <button type="button" class="btn btn--remove-small" id="editRemoveDiscountBtn" title="할인 삭제">-</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-col-6">
+                                <label>접수일</label>
+                                <input type="date" class="form-control" id="editPaymentDate" value="2025-09-25">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col-12">
+                                <div class="payment-row">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="editUnpaid">
+                                        <span class="form-check-label">미납 여부</span>
+                                    </label>
+                                    <span class="amount" id="editAmount">0원</span>
+                                    <button type="button" class="btn btn--payment">결제</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 기타결제 -->
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-col-6">
+                                <label>기타결제</label>
+                                <select class="form-control" id="editOtherPaymentSelect">
+                                    <option value="">선택하세요</option>
+                                </select>
+                            </div>
+                            <div class="form-col-6">
+                                <label>&nbsp;</label>
+                                <div class="button-group">
+                                    <button type="button" class="btn btn--add" id="editAddPaymentListBtn" title="목록 추가">+</button>
+                                    <button type="button" class="btn btn--remove" id="editRemovePaymentListBtn" title="목록 삭제">-</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 방문경로 섹션 -->
+                    <div class="form-group">
+                        <label>방문경로<span class="required">(필수)</span></label>
+                        <div class="checkbox-grid" id="editVisitPaths">
+                            <!-- 동적으로 생성됨 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 연습방법 섹션 -->
+                    <div class="form-group">
+                        <label>지금까지 연습방법</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="editPractice" value="first" id="editPracticeFirst">
+                                <span>처음</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="editPractice" value="self" id="editPracticeSelf">
+                                <span>독학/가족</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="editPractice" value="other" id="editPracticeOther">
+                                <span>타 학원</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="editPractice" value="etc" id="editPracticeEtc">
+                                <span>기타</span>
+                            </label>
+                        </div>
+                        <input type="text" class="form-control" id="editPracticeMemo" placeholder="타 학원 또는 기타 사항을 메모해두세요">
+                    </div>
+                    
+                    <!-- 시험응시 예정/일자 섹션 -->
+                    <div class="form-group">
+                        <label>시험응시 예정/일자</label>
+                        <div class="form-row">
+                            <div class="form-col-6">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="editIndoorTestCheck">
+                                    <span class="form-check-label">장내기능 시험</span>
+                                </label>
+                                <div class="form-row">
+                                    <div class="form-col-12">
+                                        <input type="date" class="form-control" id="editIndoorTestDate" placeholder="날짜지정">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-col-6">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="editRoadTestCheck">
+                                    <span class="form-check-label">도로주행 시험</span>
+                                </label>
+                                <div class="form-row">
+                                    <div class="form-col-12">
+                                        <input type="date" class="form-control" id="editRoadTestDate" placeholder="날짜지정">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 응시 예정 시험장 -->
+                    <div class="form-group">
+                        <label>응시 예정 시험장</label>
+                        <input type="text" class="form-control" id="editTestCenter" placeholder="시험장을 입력해주세요">
+                    </div>
+                    
+                    <!-- 사전상담여부 -->
+                    <div class="form-group">
+                        <label>사전상담여부</label>
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" id="editPreConsultation">
+                            <span class="form-check-label">진행</span>
+                        </label>
+                    </div>
+                    
+                    <!-- 시험합격여부 -->
+                    <div class="form-group">
+                        <label>시험합격여부</label>
+                        <div class="checkbox-group">
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editWrittenPass">
+                                <span class="form-check-label">필기합격</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editFunctionPass">
+                                <span class="form-check-label">기능합격</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editDrivingPass">
+                                <span class="form-check-label">주행합격</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editFinalPass">
+                                <span class="form-check-label">최종합격</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 회원상태 -->
+                    <div class="form-group">
+                        <label>회원상태</label>
+                        <div class="checkbox-group">
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editRefunded">
+                                <span class="form-check-label">환불함</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editExpired">
+                                <span class="form-check-label">기간만료</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 약관 동의 -->
+                    <div class="form-group">
+                        <label>약관 설명 및 동의</label>
+                        <div class="agreement-group">
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editTermsAgreed">
+                                <span class="form-check-label">약관 설명 및 동의하였습니다.</span>
+                            </label>
+                            <div class="agreement-buttons">
+                                <a href="#" class="link" id="editTermsViewLink">[약관보기]</a>
+                                <button type="button" class="btn btn--add-small" id="editAddTermsBtn" title="약관 작성">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 기타 메모 -->
+                    <div class="form-group">
+                        <label>기타 메모</label>
+                        <textarea class="form-control" id="editGeneralMemo" placeholder="메모를 입력해주세요." rows="4"></textarea>
+                    </div>
+                    
+                    <!-- 교육 및 메모사항 -->
+                    <div class="form-group">
+                        <label>교육 및 메모사항</label>
+                        <button type="button" class="btn btn--add" id="editAddMemoBtn">+</button>
+                        <div id="editMemoContainer">
+                            <!-- 동적으로 추가될 메모 항목들이 여기에 들어갑니다 -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal__footer">
+                <button type="button" class="btn btn--cancel" id="memberEditCloseBtn">취소</button>
+                <button type="button" class="btn btn--complete" onclick="updateMemberForm()">수정 완료</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script>
+        // 로그인 상태 확인
+        window.addEventListener('load', function() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const userRole = localStorage.getItem('userRole');
+            
+            if (isLoggedIn !== 'true' || userRole !== 'admin') {
+                // 로그인되지 않은 상태면 로그인 페이지로 이동
+                window.location.href = 'login.html';
+                return;
+            }
+        });
+
+        // 로그아웃 기능
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
+        // 네비게이션 토글 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            const navParents = document.querySelectorAll('.nav__parent');
+            navParents.forEach(parent => {
+                parent.addEventListener('click', function() {
+                    const children = this.nextElementSibling;
+                    if (children) {
+                        children.style.display = children.style.display === 'none' ? 'grid' : 'none';
+                        this.classList.toggle('active');
+                    }
+                });
+            });
+            
+            // 네비게이션 링크들이 정상적으로 작동하도록 보장
+            const navLinks = document.querySelectorAll('.nav__child, .nav__item');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    console.log('네비게이션 링크 클릭:', href);
+                    
+                    // href가 #이 아닌 경우에만 페이지 이동
+                    if (href && href !== '#') {
+                        e.preventDefault(); // 기본 동작 방지
+                        console.log('페이지 이동:', href);
+                        window.location.href = href; // 직접 페이지 이동
+                    }
+                });
+            });
+            
+            // 이벤트 리스너는 함수 정의 후에 등록
+        });
+
+        // 간단한 테스트 스크립트
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('인라인 스크립트 로드됨');
+            
+            var addButton = document.querySelector('.btn--add-member');
+            console.log('버튼 찾음:', addButton);
+            
+            if (addButton) {
+                addButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('버튼 클릭됨!');
+                    
+                    var modal = document.getElementById('memberModal');
+                    console.log('모달 찾음:', modal);
+                    
+                    if (modal) {
+                        // 모든 스타일을 강제로 설정
+                        modal.style.cssText = `
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            width: 100vw !important;
+                            height: 100vh !important;
+                            background: rgba(0, 0, 0, 0.7) !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            z-index: 10000 !important;
+                            padding: 20px !important;
+                            box-sizing: border-box !important;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+                        `;
+                        modal.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                        console.log('모달 열림 - 강제 스타일 적용');
+                    }
+                });
+            }
+
+            // 모달 닫기 기능
+            var closeButton = document.querySelector('.modal__close');
+            var cancelButton = document.querySelector('.btn--cancel');
+            
+            function closeModal() {
+                var modal = document.getElementById('memberModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                    modal.style.opacity = '0';
+                    modal.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+            
+            if (closeButton) {
+                closeButton.addEventListener('click', closeModal);
+            }
+            
+            if (cancelButton) {
+                cancelButton.addEventListener('click', closeModal);
+            }
+            
+            // 모달 배경 클릭 시 닫기
+            var modal = document.getElementById('memberModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal();
+                    }
+                });
+            }
+
+            // 상품 목록 관리 (서버에서 불러오기)
+            var productList = [];
+            var productSelect = document.getElementById('productSelect');
+            var addProductBtn = document.getElementById('addProductBtn');
+            var removeProductBtn = document.getElementById('removeProductBtn');
+
+            // 할인 목록 관리 (서버에서 불러오기)
+            var discountList = [];
+            var discountSelect = document.getElementById('discountSelect');
+            var addDiscountBtn = document.getElementById('addDiscountBtn');
+            var removeDiscountBtn = document.getElementById('removeDiscountBtn');
+
+            // 기타결제 목록 관리 (서버에서 불러오기)
+            var otherPaymentList = [];
+            var otherPaymentSelect = document.getElementById('otherPaymentSelect');
+            var addPaymentListBtn = document.getElementById('addPaymentListBtn');
+            var removePaymentListBtn = document.getElementById('removePaymentListBtn');
+
+            // 상품 추가 버튼 클릭
+            if (addProductBtn) {
+                addProductBtn.addEventListener('click', function() {
+                    var productName = prompt('상품 이름을 입력하세요:');
+                    if (productName && productName.trim() !== '') {
+                        var productPeriod = prompt('몇 개월 상품인가요? (개월 상품이면 숫자로 표기, 시간제이면 "0"으로 표기):');
+                        if (productPeriod !== null && !isNaN(productPeriod) && parseInt(productPeriod) >= 0) {
+                            var productHours = prompt('이용시간은 몇 시간인가요? (시간제이면 숫자로 표기, 무제한이면 "0"으로 표기):');
+                            if (productHours !== null && !isNaN(productHours) && parseInt(productHours) >= 0) {
+                                var productPrice = prompt('상품 가격을 입력하세요 (숫자만):');
+                                if (productPrice && !isNaN(productPrice) && parseFloat(productPrice) >= 0) {
+                                    var period = parseInt(productPeriod);
+                                    var hours = parseInt(productHours);
+                                    
+                                    // 상품 정보 문자열 생성
+                                    var periodText = period === 0 ? '시간제' : period + '개월';
+                                    var hoursText = hours === 0 ? '무제한' : hours + '시간';
+                                    
+                                    var product = {
+                                        name: productName.trim(),
+                                        price: parseFloat(productPrice),
+                                        period: period,
+                                        hours: hours,
+                                        displayText: periodText + ' ' + hoursText
+                                    };
+                                    
+                                    productList.push(product);
+                                    updateProductSelect();
+                                    saveListToServer('products', productList);
+                                    console.log('상품 목록 추가:', product);
+                                } else {
+                                    alert('올바른 가격을 입력해주세요.');
+                                }
+                            } else {
+                                alert('올바른 이용시간을 입력해주세요.');
+                            }
+                        } else {
+                            alert('올바른 기간을 입력해주세요.');
+                        }
+                    }
+                });
+            }
+
+            // 상품 삭제 버튼 클릭
+            if (removeProductBtn) {
+                removeProductBtn.addEventListener('click', function() {
+                    if (productList.length === 0) {
+                        alert('삭제할 상품이 없습니다.');
+                        return;
+                    }
+                    
+                    var listText = '삭제할 상품을 선택하세요:\n\n';
+                    productList.forEach(function(product, index) {
+                        listText += (index + 1) + '. ' + product.name + ' (' + product.price.toLocaleString() + '원) - ' + product.displayText + '\n';
+                    });
+                    
+                    var choice = prompt(listText + '\n번호를 입력하세요 (취소하려면 0):');
+                    var index = parseInt(choice) - 1;
+                    
+                    if (choice === '0' || choice === null) {
+                        return;
+                    }
+                    
+                    if (index >= 0 && index < productList.length) {
+                        var removedItem = productList.splice(index, 1)[0];
+                        updateProductSelect();
+                        saveListToServer('products', productList);
+                        console.log('상품 목록 삭제:', removedItem);
+                        alert('"' + removedItem.name + '" 상품이 삭제되었습니다.');
+                    } else {
+                        alert('올바른 번호를 입력해주세요.');
+                    }
+                });
+            }
+
+            // 할인 추가 버튼 클릭
+            if (addDiscountBtn) {
+                addDiscountBtn.addEventListener('click', function() {
+                    var discountName = prompt('할인 이름을 입력하세요:');
+                    if (discountName && discountName.trim() !== '') {
+                        var discountRate = prompt('할인률을 입력하세요 (예: 10 = 10%):');
+                        if (discountRate && !isNaN(discountRate) && parseFloat(discountRate) >= 0 && parseFloat(discountRate) <= 100) {
+                            var discount = {
+                                name: discountName.trim(),
+                                rate: parseFloat(discountRate)
+                            };
+                            discountList.push(discount);
+                            updateDiscountSelect();
+                            saveListToServer('discounts', discountList);
+                            console.log('할인 목록 추가:', discount);
+                        } else {
+                            alert('올바른 할인률을 입력해주세요 (0-100 사이의 숫자).');
+                        }
+                    }
+                });
+            }
+
+            // 할인 삭제 버튼 클릭
+            if (removeDiscountBtn) {
+                removeDiscountBtn.addEventListener('click', function() {
+                    if (discountList.length === 0) {
+                        alert('삭제할 할인이 없습니다.');
+                        return;
+                    }
+                    
+                    var listText = '삭제할 할인을 선택하세요:\n\n';
+                    discountList.forEach(function(discount, index) {
+                        listText += (index + 1) + '. ' + discount.name + ' (' + discount.rate + '%)\n';
+                    });
+                    
+                    var choice = prompt(listText + '\n번호를 입력하세요 (취소하려면 0):');
+                    var index = parseInt(choice) - 1;
+                    
+                    if (choice === '0' || choice === null) {
+                        return;
+                    }
+                    
+                    if (index >= 0 && index < discountList.length) {
+                        var removedItem = discountList.splice(index, 1)[0];
+                        updateDiscountSelect();
+                        saveListToServer('discounts', discountList);
+                        console.log('할인 목록 삭제:', removedItem);
+                        alert('"' + removedItem.name + '" 할인이 삭제되었습니다.');
+                    } else {
+                        alert('올바른 번호를 입력해주세요.');
+                    }
+                });
+            }
+
+            // 기타결제 목록 추가하기 버튼 클릭
+            if (addPaymentListBtn) {
+                addPaymentListBtn.addEventListener('click', function() {
+                    var paymentName = prompt('기타결제 목록 이름을 입력하세요:');
+                    if (paymentName && paymentName.trim() !== '') {
+                        var paymentPrice = prompt('가격을 입력하세요 (숫자만 입력):');
+                        if (paymentPrice !== null && !isNaN(paymentPrice) && parseInt(paymentPrice) >= 0) {
+                            var paymentItem = {
+                                name: paymentName.trim(),
+                                price: parseInt(paymentPrice)
+                            };
+                            otherPaymentList.push(paymentItem);
+                            updateOtherPaymentSelect();
+                            saveListToServer('payments', otherPaymentList);
+                            console.log('기타결제 목록 추가:', paymentItem);
+                        } else if (paymentPrice !== null) {
+                            alert('올바른 가격을 입력해주세요.');
+                        }
+                    }
+                });
+            }
+
+            // 목록 삭제하기 버튼 클릭
+            if (removePaymentListBtn) {
+                removePaymentListBtn.addEventListener('click', function() {
+                    if (otherPaymentList.length === 0) {
+                        alert('삭제할 목록이 없습니다.');
+                        return;
+                    }
+                    
+                    var listText = '삭제할 기타결제 목록을 선택하세요:\n\n';
+                    otherPaymentList.forEach(function(payment, index) {
+                        var displayName = typeof payment === 'string' ? payment : payment.name + ' (' + payment.price.toLocaleString() + '원)';
+                        listText += (index + 1) + '. ' + displayName + '\n';
+                    });
+                    
+                    var choice = prompt(listText + '\n번호를 입력하세요 (취소하려면 0):');
+                    var index = parseInt(choice) - 1;
+                    
+                    if (choice === '0' || choice === null) {
+                        return; // 취소
+                    }
+                    
+                    if (index >= 0 && index < otherPaymentList.length) {
+                        var removedItem = otherPaymentList.splice(index, 1)[0];
+                        updateOtherPaymentSelect();
+                        saveListToServer('payments', otherPaymentList);
+                        console.log('기타결제 목록 삭제:', removedItem);
+                        var itemName = typeof removedItem === 'string' ? removedItem : removedItem.name;
+                        alert('"' + itemName + '" 목록이 삭제되었습니다.');
+                    } else {
+                        alert('올바른 번호를 입력해주세요.');
+                    }
+                });
+            }
+
+
+            // 상품 셀렉트 박스 업데이트
+            function updateProductSelect() {
+                if (productSelect) {
+                    // 기존 옵션 제거 (첫 번째 옵션 제외)
+                    while (productSelect.children.length > 1) {
+                        productSelect.removeChild(productSelect.lastChild);
+                    }
+                    
+                    // 새 목록 추가
+                    productList.forEach(function(product) {
+                        var option = document.createElement('option');
+                        option.value = product.name;
+                        option.textContent = product.name + ' (' + product.price.toLocaleString() + '원) - ' + product.displayText;
+                        option.setAttribute('data-price', product.price);
+                        option.setAttribute('data-period', product.period);
+                        option.setAttribute('data-hours', product.hours);
+                        option.setAttribute('data-display-text', product.displayText);
+                        productSelect.appendChild(option);
+                    });
+                }
+            }
+
+            // 할인 셀렉트 박스 업데이트
+            function updateDiscountSelect() {
+                if (discountSelect) {
+                    // 기존 옵션 제거 (첫 번째 옵션 제외)
+                    while (discountSelect.children.length > 1) {
+                        discountSelect.removeChild(discountSelect.lastChild);
+                    }
+                    
+                    // 새 목록 추가
+                    discountList.forEach(function(discount) {
+                        var option = document.createElement('option');
+                        option.value = discount.name;
+                        option.textContent = discount.name + ' (' + discount.rate + '%)';
+                        option.setAttribute('data-rate', discount.rate);
+                        discountSelect.appendChild(option);
+                    });
+                }
+            }
+
+            // 기타결제 셀렉트 박스 업데이트
+            function updateOtherPaymentSelect() {
+                if (otherPaymentSelect) {
+                    // 기존 옵션 제거 (첫 번째 옵션 제외)
+                    while (otherPaymentSelect.children.length > 1) {
+                        otherPaymentSelect.removeChild(otherPaymentSelect.lastChild);
+                    }
+                    
+                    // 새 목록 추가
+                    otherPaymentList.forEach(function(payment) {
+                        var option = document.createElement('option');
+                        if (typeof payment === 'string') {
+                            // 기존 문자열 형태 (하위 호환성)
+                            option.value = payment;
+                            option.textContent = payment;
+                        } else {
+                            // 새로운 객체 형태 (이름 + 가격)
+                            option.value = payment.name;
+                            option.textContent = payment.name + ' (' + payment.price.toLocaleString() + '원)';
+                            option.setAttribute('data-price', payment.price);
+                        }
+                        otherPaymentSelect.appendChild(option);
+                    });
+                }
+            }
+
+            // 생년월일 Select Box 초기화
+            function initializeBirthDateSelects() {
+                var birthYear = document.getElementById('birthYear');
+                var birthMonth = document.getElementById('birthMonth');
+                var birthDay = document.getElementById('birthDay');
+
+                // 년도 옵션 생성 (1950년 ~ 현재년도)
+                if (birthYear) {
+                    var currentYear = new Date().getFullYear();
+                    for (var year = currentYear; year >= 1950; year--) {
+                        var option = document.createElement('option');
+                        option.value = year;
+                        option.textContent = year + '년';
+                        birthYear.appendChild(option);
+                    }
+                }
+
+                // 월 옵션 생성
+                if (birthMonth) {
+                    for (var month = 1; month <= 12; month++) {
+                        var option = document.createElement('option');
+                        option.value = month;
+                        option.textContent = month + '월';
+                        birthMonth.appendChild(option);
+                    }
+                }
+
+                // 일 옵션 생성 (1일 ~ 31일)
+                if (birthDay) {
+                    for (var day = 1; day <= 31; day++) {
+                        var option = document.createElement('option');
+                        option.value = day;
+                        option.textContent = day + '일';
+                        birthDay.appendChild(option);
+                    }
+                }
+            }
+
+            // 월 변경 시 일 옵션 업데이트
+            function updateBirthDayOptions() {
+                var birthYear = document.getElementById('birthYear');
+                var birthMonth = document.getElementById('birthMonth');
+                var birthDay = document.getElementById('birthDay');
+
+                if (birthYear && birthMonth && birthDay) {
+                    var year = parseInt(birthYear.value);
+                    var month = parseInt(birthMonth.value);
+                    
+                    if (year && month) {
+                        // 해당 월의 마지막 날 계산
+                        var lastDay = new Date(year, month, 0).getDate();
+                        
+                        // 기존 일 옵션 제거 (첫 번째 옵션 제외)
+                        while (birthDay.children.length > 1) {
+                            birthDay.removeChild(birthDay.lastChild);
+                        }
+                        
+                        // 새 일 옵션 추가
+                        for (var day = 1; day <= lastDay; day++) {
+                            var option = document.createElement('option');
+                            option.value = day;
+                            option.textContent = day + '일';
+                            birthDay.appendChild(option);
+                        }
+                    }
+                }
+            }
+
+            // 생년월일 Select Box 이벤트 리스너
+            var birthYear = document.getElementById('birthYear');
+            var birthMonth = document.getElementById('birthMonth');
+            
+            if (birthYear) {
+                birthYear.addEventListener('change', updateBirthDayOptions);
+            }
+            
+            if (birthMonth) {
+                birthMonth.addEventListener('change', updateBirthDayOptions);
+            }
+
+            // 페이지 로드 시 생년월일 Select Box 초기화
+            initializeBirthDateSelects();
+            
+            // 서버에서 목록 저장 함수
+            function saveListToServer(type, data) {
+                return fetch('api/save_lists.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        data: data
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        console.log(type + ' 목록 서버 저장 성공:', result);
+                    } else {
+                        console.error(type + ' 목록 서버 저장 실패:', result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error(type + ' 목록 서버 저장 오류:', error);
+                });
+            }
+
+            // 서버에서 목록 불러오기 함수
+            function loadListFromServer(type) {
+                return fetch('api/save_lists.php?type=' + type)
+                .then(response => {
+                    // 응답이 비어있거나 JSON이 아닌 경우 처리
+                    if (!response.ok) {
+                        throw new Error('서버 응답 오류: ' + response.status);
+                    }
+                    
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.warn(type + ' 목록: JSON이 아닌 응답, 빈 배열 반환');
+                        return [];
+                    }
+                    
+                    return response.text().then(text => {
+                        if (!text.trim()) {
+                            console.warn(type + ' 목록: 빈 응답, 빈 배열 반환');
+                            return [];
+                        }
+                        
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.warn(type + ' 목록: JSON 파싱 실패, 빈 배열 반환');
+                            return [];
+                        }
+                    });
+                })
+                .then(result => {
+                    if (result && result.success) {
+                        console.log(type + ' 목록 서버 로드 성공:', result.data);
+                        return result.data || [];
+                    } else {
+                        console.warn(type + ' 목록 서버 로드 실패, 빈 배열 반환');
+                        return [];
+                    }
+                })
+                .catch(error => {
+                    console.warn(type + ' 목록 서버 로드 오류, 빈 배열 반환:', error.message);
+                    return [];
+                });
+            }
+
+            // 전역 변수로 회원 데이터 저장
+            let allMembers = [];
+            let currentPage = 1;
+            const membersPerPage = 20;
+
+            // 회원 데이터 로드 함수
+            function loadMembers() {
+                console.log('loadMembers 함수 호출됨');
+                return fetch('api/get_members.php')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        console.log('회원 데이터 로드 성공:', result.members.length + '명');
+                        allMembers = result.members; // 전역 변수에 저장
+                        console.log('allMembers 변수에 저장됨:', allMembers.length + '명');
+                        updateMembersTable(result.members);
+                        return result.members;
+                    } else {
+                        console.error('회원 데이터 로드 실패:', result.message);
+                        allMembers = []; // 전역 변수 초기화
+                        return [];
+                    }
+                })
+                .catch(error => {
+                    console.error('회원 데이터 로드 오류:', error);
+                    allMembers = []; // 전역 변수 초기화
+                    return [];
+                });
+            }
+
+            // 상품 필터링 함수
+            function filterMembersByProduct() {
+                console.log('상품 필터링 함수 호출됨');
+                const productFilter = document.getElementById('productFilter');
+                const selectedProduct = productFilter.value;
+                
+                console.log('선택된 상품:', selectedProduct);
+                console.log('전체 회원 수:', allMembers.length);
+                
+                // 페이지를 1로 초기화
+                currentPage = 1;
+                
+                let filteredMembers = allMembers;
+                
+                if (selectedProduct) {
+                    filteredMembers = allMembers.filter(member => {
+                        // product_name 또는 product 필드에서 부분 일치 검색
+                        const productName = member.product_name || member.product || '';
+                        const isMatch = productName.includes(selectedProduct);
+                        console.log(`회원 ${member.name}: ${productName} - ${isMatch ? '일치' : '불일치'}`);
+                        return isMatch;
+                    });
+                    console.log('필터링된 회원 수:', filteredMembers.length);
+                }
+                
+                updateMembersTable(filteredMembers);
+            }
+
+            // 검색 함수 (전역 함수로 등록)
+            window.searchMembers = function() {
+                console.log('검색 함수 호출됨');
+                const searchInput = document.getElementById('searchInput');
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                
+                console.log('검색어:', searchTerm);
+                console.log('전체 회원 수:', allMembers.length);
+                
+                // 페이지를 1로 초기화
+                currentPage = 1;
+                
+                let filteredMembers = allMembers;
+                
+                if (searchTerm) {
+                    filteredMembers = allMembers.filter(member => {
+                        // 이름으로 검색
+                        const nameMatch = member.name && member.name.toLowerCase().includes(searchTerm);
+                        
+                        // 전화번호로 검색 (하이픈 제거하고 숫자만으로 검색)
+                        let phoneMatch = false;
+                        if (member.phone) {
+                            const memberPhone = member.phone.replace(/[-\s]/g, ''); // 하이픈과 공백 제거
+                            const searchPhone = searchTerm.replace(/[-\s]/g, ''); // 하이픈과 공백 제거
+                            phoneMatch = memberPhone.includes(searchPhone);
+                        }
+                        
+                        // 상품명으로 검색 (product_name 또는 product 필드)
+                        const productName = member.product_name || member.product || '';
+                        const productMatch = productName.toLowerCase().includes(searchTerm);
+                        
+                        const isMatch = nameMatch || phoneMatch || productMatch;
+                        
+                        if (isMatch) {
+                            console.log(`검색 일치: ${member.name} (이름: ${nameMatch}, 전화: ${phoneMatch}, 상품: ${productMatch})`);
+                        }
+                        
+                        return isMatch;
+                    });
+                    console.log('검색 결과 회원 수:', filteredMembers.length);
+                }
+                
+                updateMembersTable(filteredMembers);
+            };
+
+            // 합격 여부 필터링 함수
+            function filterMembersByStatus() {
+                console.log('합격 여부 필터링 함수 호출됨');
+                const statusRadios = document.querySelectorAll('input[name="status"]');
+                let selectedStatus = '';
+                
+                statusRadios.forEach(radio => {
+                    if (radio.checked) {
+                        selectedStatus = radio.value;
+                    }
+                });
+                
+                console.log('선택된 합격 여부:', selectedStatus);
+                console.log('전체 회원 수:', allMembers.length);
+                
+                // 페이지를 1로 초기화
+                currentPage = 1;
+                
+                let filteredMembers = allMembers;
+                
+                if (selectedStatus) {
+                    filteredMembers = allMembers.filter(member => {
+                        let isMatch = false;
+                        
+                        if (selectedStatus === '최종합격') {
+                            // 최종합격여부 필드에서 "최종합격" 검색
+                            const finalPassStatus = member.final_pass || member.pass_status || '';
+                            isMatch = finalPassStatus === '최종합격' || finalPassStatus === '합격';
+                        } else {
+                            // 기존 로직 유지 (미합격, 필기합격, 기능합격)
+                            const passStatus = member.pass_status || member.final_pass || '';
+                            isMatch = passStatus === selectedStatus;
+                        }
+                        
+                        console.log(`회원 ${member.name}: ${member.final_pass || member.pass_status || ''} - ${isMatch ? '일치' : '불일치'}`);
+                        return isMatch;
+                    });
+                    console.log('필터링된 회원 수:', filteredMembers.length);
+                }
+                
+                updateMembersTable(filteredMembers);
+            }
+
+            // 필터 초기화 함수 (전역 함수로 등록)
+            window.resetFilters = function() {
+                console.log('필터 초기화 함수 호출됨');
+                
+                // 상품 필터 초기화
+                const productFilter = document.getElementById('productFilter');
+                if (productFilter) {
+                    productFilter.value = '';
+                }
+                
+                // 검색 입력 초기화
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                
+                // 합격 여부 라디오 버튼 초기화
+                const statusRadios = document.querySelectorAll('input[name="status"]');
+                statusRadios.forEach(radio => {
+                    radio.checked = false;
+                });
+                
+                // 모든 회원 표시
+                updateMembersTable(allMembers);
+                console.log('모든 필터가 초기화되었습니다. 전체 회원 수:', allMembers.length);
+            }
+
+            // 페이지네이션 생성 함수
+            function generatePagination(totalMembers, currentPage) {
+                const totalPages = Math.ceil(totalMembers / membersPerPage);
+                const pagination = document.getElementById('pagination');
+                
+                if (!pagination) return;
+                
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+                
+                let html = '';
+                
+                // 이전 버튼
+                html += `<button class="btn btn--ghost" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">이전</button>`;
+                
+                // 페이지 번호들
+                for (let i = 1; i <= totalPages; i++) {
+                    const isActive = i === currentPage;
+                    html += `<button class="btn ${isActive ? 'btn--primary' : 'btn--ghost'}" onclick="goToPage(${i})">${i}</button>`;
+                }
+                
+                // 다음 버튼
+                html += `<button class="btn btn--ghost" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">다음</button>`;
+                
+                pagination.innerHTML = html;
+            }
+
+            // 페이지 이동 함수 (전역 함수로 등록)
+            window.goToPage = function(page) {
+                if (page < 1) return;
+                
+                const totalPages = Math.ceil(allMembers.length / membersPerPage);
+                if (page > totalPages) return;
+                
+                currentPage = page;
+                updateMembersTable(allMembers);
+                generatePagination(allMembers.length, currentPage);
+            };
+
+            // 회원 테이블 업데이트 함수
+            function updateMembersTable(members) {
+                const tbody = document.getElementById('membersTableBody');
+                if (!tbody) return;
+
+                if (members.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 40px; color: #9aa4b2;">
+                                등록된 회원이 없습니다.
+                            </td>
+                        </tr>
+                    `;
+                    generatePagination(0, 1);
+                    return;
+                }
+
+                // 페이지네이션 적용
+                const startIndex = (currentPage - 1) * membersPerPage;
+                const endIndex = startIndex + membersPerPage;
+                const paginatedMembers = members.slice(startIndex, endIndex);
+
+                // 페이지네이션 UI 업데이트
+                generatePagination(members.length, currentPage);
+
+                let html = '';
+                paginatedMembers.forEach(member => {
+                    // 이름에서 첫 글자 추출
+                    const firstChar = member.name.charAt(0);
+                    
+                    // 가입일자 포맷팅
+                    const createdDate = new Date(member.created_at);
+                    const formattedDate = createdDate.toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+
+                    html += `
+                        <tr>
+                            <td><input type="checkbox" class="member-checkbox" data-member-id="${member.id}" data-member-name="${member.name}"></td>
+                            <td>
+                                <div class="usercell">
+                                    <div class="avatar">${firstChar}</div>
+                                    <div>
+                                        <div class="name" style="cursor: pointer; color: #3b82f6; text-decoration: underline;" onclick="showMemberDetail(${member.id})">${member.name}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${member.phone || '-'}</td>
+                            <td><span class="badge">${member.product || '-'}</span></td>
+                            <td>${member.remaining_time}</td>
+                            <td>${member.test_date}</td>
+                            <td>${member.pass_status}</td>
+                            <td>${member.branch}</td>
+                            <td>${formattedDate}</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+                
+                // 테이블 업데이트 후 이벤트 리스너 재설정
+                setupSelectAllCheckbox();
+            }
+
+            // 페이지 로드 시 서버에서 목록들 불러오기
+            loadListFromServer('products').then(data => {
+                productList = data;
+                updateProductSelect();
+            });
+            
+            loadListFromServer('discounts').then(data => {
+                discountList = data;
+                updateDiscountSelect();
+            });
+            
+            loadListFromServer('payments').then(data => {
+                otherPaymentList = data;
+                updateOtherPaymentSelect();
+            });
+
+            // 전체 선택 체크박스 이벤트
+            function setupSelectAllCheckbox() {
+                const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.addEventListener('change', function() {
+                        const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+                        memberCheckboxes.forEach(checkbox => {
+                            checkbox.checked = this.checked;
+                        });
+                    });
+                }
+            }
+
+            // 선택된 회원들 삭제 함수
+            function deleteSelectedMembers() {
+                const selectedCheckboxes = document.querySelectorAll('.member-checkbox:checked');
+                
+                if (selectedCheckboxes.length === 0) {
+                    alert('삭제할 회원을 선택해주세요.');
+                    return;
+                }
+
+                // 선택된 회원 정보 수집
+                const selectedMembers = Array.from(selectedCheckboxes).map(checkbox => ({
+                    id: parseInt(checkbox.getAttribute('data-member-id')),
+                    name: checkbox.getAttribute('data-member-name')
+                }));
+
+                // 확인 메시지 생성
+                let confirmMessage = '정말로 다음 회원들을 삭제하시겠습니까?\n\n';
+                selectedMembers.forEach(member => {
+                    confirmMessage += `• ${member.name}님\n`;
+                });
+                confirmMessage += '\n삭제된 데이터는 복구할 수 없습니다.';
+
+                if (confirm(confirmMessage)) {
+                    // 서버에 삭제 요청
+                    const memberIds = selectedMembers.map(member => member.id);
+                    
+                    fetch('api/delete_members.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            memberIds: memberIds
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert(result.message);
+                            // 회원 목록 새로고침
+                            loadMembers();
+                            // 전체 선택 체크박스 해제
+                            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+                            if (selectAllCheckbox) {
+                                selectAllCheckbox.checked = false;
+                            }
+                        } else {
+                            alert('회원 삭제 실패: ' + result.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('회원 삭제 오류:', error);
+                        alert('회원 삭제 중 오류가 발생했습니다: ' + error.message);
+                    });
+                }
+            }
+
+            // 선택 삭제 버튼 이벤트
+            function setupDeleteButton() {
+                const deleteButton = document.querySelector('.btn--danger');
+                if (deleteButton) {
+                    deleteButton.addEventListener('click', deleteSelectedMembers);
+                }
+            }
+
+            // 페이지 로드 시 회원 데이터 불러오기
+            loadMembers();
+            
+            // 이벤트 리스너 등록
+            const productFilter = document.getElementById('productFilter');
+            if (productFilter) {
+                productFilter.addEventListener('change', filterMembersByProduct);
+                console.log('상품 필터 이벤트 리스너 등록됨');
+            }
+            
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchMembers();
+                    }
+                });
+                console.log('검색 입력 이벤트 리스너 등록됨');
+            }
+            
+            // 합격 여부 라디오 버튼 이벤트 리스너 추가
+            const statusRadios = document.querySelectorAll('input[name="status"]');
+            statusRadios.forEach(radio => {
+                radio.addEventListener('change', filterMembersByStatus);
+            });
+            console.log('합격 여부 라디오 버튼 이벤트 리스너 등록됨');
+            
+            // 회원 정보 수정 함수 (전역 함수로 등록)
+            window.showMemberDetail = function(memberId) {
+                const modal = document.getElementById('memberEditModal');
+                const nameElement = document.getElementById('memberEditName');
+                
+                if (!modal || !nameElement) return;
+                
+                // 회원 ID를 모달에 저장
+                modal.setAttribute('data-member-id', memberId);
+                console.log('🔧 모달에 회원 ID 저장:', memberId);
+                
+                // 약관 모달 초기화
+                const termsViewModal = document.getElementById('termsViewModal');
+                if (termsViewModal) {
+                    termsViewModal.style.zIndex = '999999';
+                    if (termsViewModal.querySelector('.modal__content')) {
+                        termsViewModal.querySelector('.modal__content').style.zIndex = '1000000';
+                    }
+                }
+                
+                // 로딩 상태 표시
+                nameElement.textContent = '회원 정보를 불러오는 중...';
+                
+                // 모달 열기
+                modal.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    background: rgba(0, 0, 0, 0.7) !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    z-index: 10000 !important;
+                    padding: 20px !important;
+                    box-sizing: border-box !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                `;
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                
+                // 회원 상세 정보 로드
+                fetch('api/debug_member_detail.php?id=' + memberId)
+                .then(response => response.json())
+                .then(result => {
+                    console.log('🔍 API 응답:', result);
+                    if (result.success) {
+                        console.log('🔍 회원 데이터:', result.member);
+                        loadMemberDataToForm(result.member);
+                    } else {
+                        nameElement.textContent = '오류 발생';
+                        alert('회원 정보를 불러올 수 없습니다: ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('회원 정보 로드 오류:', error);
+                    nameElement.textContent = '오류 발생';
+                    alert('회원 정보를 불러오는 중 오류가 발생했습니다.');
+                });
+            };
+
+            // 회원 데이터를 수정 폼에 로드하는 함수
+            function loadMemberDataToForm(member) {
+                const nameElement = document.getElementById('memberEditName');
+                nameElement.textContent = member.name + '님의 정보 수정';
+                
+                console.log('로드할 회원 데이터:', member);
+                console.log('상품명:', member.productName);
+                console.log('할인명:', member.discountName);
+                console.log('생년월일:', member.birthYear, member.birthMonth, member.birthDay);
+                console.log('방문경로:', member.visitPaths);
+                console.log('방문경로 배열:', member.visitPathsArray);
+                console.log('기타 메모:', member.generalMemo);
+                
+                // 기본 정보
+                document.getElementById('editName').value = member.name || '';
+                document.getElementById('editAddress').value = member.address || '';
+                document.getElementById('editDetailAddress').value = member.detailAddress || '';
+                document.getElementById('editPhone').value = member.phone || '';
+                document.getElementById('editNoPhone').checked = member.noPhone === '연락처 없음';
+                document.getElementById('editPaymentDate').value = member.receptionDate || '';
+                
+                // 성별 (API에서 한글로 변환되어 옴)
+                if (member.gender === '남자') {
+                    document.getElementById('editGenderMale').checked = true;
+                } else if (member.gender === '여자') {
+                    document.getElementById('editGenderFemale').checked = true;
+                }
+                
+                // 생년월일 (Select Box 생성 후에 설정)
+                setTimeout(() => {
+                    document.getElementById('editBirthYear').value = member.birthYear || '';
+                    document.getElementById('editBirthMonth').value = member.birthMonth || '';
+                    document.getElementById('editBirthDay').value = member.birthDay || '';
+                }, 100);
+                
+                // 상품/결제 정보 (목록 로드 후에 설정)
+                setTimeout(() => {
+                    document.getElementById('editProductSelect').value = member.productName || '';
+                    document.getElementById('editPaymentTypeSelect').value = member.paymentType || '';
+                    document.getElementById('editDiscountSelect').value = member.discountName || '';
+                    document.getElementById('editOtherPaymentSelect').value = member.otherPayment || '';
+                    document.getElementById('editUnpaid').checked = member.unpaid === '미납';
+                    
+                    // 가격 재계산
+                    calculateEditPrice();
+                }, 500);
+                
+                // 방문경로는 generateVisitPathCheckboxes() 호출 후에 설정됨
+                
+                // 연습방법 (API에서 값이 있으면 설정, 없으면 아무것도 선택하지 않음)
+                let practiceMethod = '';
+                if (member.practiceMethod) {
+                    // 한글 값으로 변환된 경우
+                    if (member.practiceMethod === '처음') practiceMethod = 'first';
+                    else if (member.practiceMethod === '독학/가족') practiceMethod = 'self';
+                    else if (member.practiceMethod === '타 학원') practiceMethod = 'other';
+                    else if (member.practiceMethod === '기타') practiceMethod = 'etc';
+                    // 영어 값인 경우 (직접 사용)
+                    else if (member.practiceMethod === 'first') practiceMethod = 'first';
+                    else if (member.practiceMethod === 'self') practiceMethod = 'self';
+                    else if (member.practiceMethod === 'other') practiceMethod = 'other';
+                    else if (member.practiceMethod === 'etc') practiceMethod = 'etc';
+                }
+                
+                console.log('연습방법 설정:', { original: member.practiceMethod, converted: practiceMethod });
+                
+                if (practiceMethod) {
+                    const practiceRadio = document.querySelector(`input[name="editPractice"][value="${practiceMethod}"]`);
+                    if (practiceRadio) {
+                        practiceRadio.checked = true;
+                        console.log('연습방법 체크박스 설정됨:', practiceMethod);
+                    } else {
+                        console.log('연습방법 체크박스를 찾을 수 없음:', practiceMethod);
+                    }
+                }
+                document.getElementById('editPracticeMemo').value = member.practiceMemo || '';
+                
+                // 시험 정보
+                document.getElementById('editIndoorTestDate').value = member.indoorTestDate || '';
+                document.getElementById('editRoadTestDate').value = member.roadTestDate || '';
+                document.getElementById('editTestCenter').value = member.testCenter || '';
+                
+                // 체크박스들 (API에서 한글로 변환되어 옴)
+                document.getElementById('editPreConsultation').checked = member.preConsultation === '진행';
+                document.getElementById('editWrittenPass').checked = member.writtenPass === '합격';
+                document.getElementById('editFunctionPass').checked = member.functionPass === '합격';
+                document.getElementById('editDrivingPass').checked = member.drivingPass === '합격';
+                document.getElementById('editFinalPass').checked = member.finalPass === '합격';
+                document.getElementById('editRefunded').checked = member.refunded === '환불함';
+                document.getElementById('editExpired').checked = member.expired === '기간만료';
+                document.getElementById('editTermsAgreed').checked = member.termsAgreed === '동의';
+                
+                // 메모
+                console.log('🔍 기타 메모 설정:', member.generalMemo);
+                const generalMemoField = document.getElementById('editGeneralMemo');
+                if (generalMemoField) {
+                    generalMemoField.value = member.generalMemo || '';
+                    console.log('✅ 기타 메모 필드 값 설정됨:', generalMemoField.value);
+                } else {
+                    console.error('❌ editGeneralMemo 필드를 찾을 수 없습니다!');
+                }
+                
+                
+                // 교육 메모 (API에서 배열로 옴)
+                let educationMemos = [];
+                if (member.education_memos && Array.isArray(member.education_memos)) {
+                    educationMemos = member.education_memos;
+                }
+                
+                console.log('🔧 정리된 교육 메모:', educationMemos);
+                
+                const memoContainer = document.getElementById('editMemoContainer');
+                memoContainer.innerHTML = '';
+                educationMemos.forEach((memo, index) => {
+                    if (memo && memo.content && memo.content.trim()) {
+                        const memoItem = document.createElement('div');
+                        memoItem.className = 'memo-item';
+                        
+                        // 날짜 형식 변환 (YYYY-MM-DD -> YYYY년 MM월 DD일)
+                        let formattedDate = '날짜 미설정';
+                        if (memo.date) {
+                            const dateObj = new Date(memo.date);
+                            if (!isNaN(dateObj.getTime())) {
+                                const year = dateObj.getFullYear();
+                                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                                const day = String(dateObj.getDate()).padStart(2, '0');
+                                formattedDate = `${year}년 ${month}월 ${day}일`;
+                            } else {
+                                formattedDate = memo.date;
+                            }
+                        }
+                        
+                        memoItem.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <label style="font-weight: 600; color: #374151; margin: 0;">${formattedDate}</label>
+                            </div>
+                            <textarea class="form-control" placeholder="교육 및 메모사항을 입력해주세요." rows="3" style="margin-bottom: 12px;">${memo.content}</textarea>
+                        `;
+                        memoContainer.appendChild(memoItem);
+                    }
+                });
+                
+                // 1. 먼저 UI 요소들 생성
+                let visitPaths = [];
+                
+                // 방문경로 데이터 정리
+                if (member.visitPathsArray && Array.isArray(member.visitPathsArray) && member.visitPathsArray.length > 0) {
+                    // 배열이지만 문자열이 들어있는 경우 처리
+                    visitPaths = member.visitPathsArray.map(item => {
+                        if (typeof item === 'string') {
+                            // "지인추천" 형태의 문자열에서 따옴표 제거
+                            return item.replace(/^["']|["']$/g, '');
+                        }
+                        return item;
+                    }).filter(item => item && item.trim() !== '');
+                } else if (member.visitPaths && member.visitPaths.trim() !== '') {
+                    // 쉼표나 공백으로 구분된 문자열을 배열로 변환
+                    visitPaths = member.visitPaths.split(/[,\s]+/).filter(path => path.trim() !== '');
+                }
+                
+                console.log('🔍 원본 방문경로 데이터:', member.visitPaths);
+                console.log('🔍 방문경로 배열 데이터:', member.visitPathsArray);
+                console.log('🔍 정리된 방문경로 배열:', visitPaths);
+                
+                // 데이터가 없거나 잘못된 형식이면 빈 배열로 설정
+                if (!visitPaths || visitPaths.length === 0) {
+                    visitPaths = [];
+                    console.log('🔧 방문경로 데이터 없음, 빈 배열로 설정');
+                } else {
+                    // 잘못된 형식의 데이터만 필터링
+                    visitPaths = visitPaths.filter(item => 
+                        item && 
+                        !item.includes('[') && 
+                        !item.includes('"') && 
+                        item.trim() !== ''
+                    );
+                    console.log('🔧 필터링된 방문경로:', visitPaths);
+                }
+                generateVisitPathCheckboxes(visitPaths);
+                initializeEditBirthDateSelects();
+                loadEditLists();
+                
+                // 2. 이벤트 리스너 설정
+                setupEditFormEventListeners();
+                
+                // 3. 가격 계산 (나중에)
+                setTimeout(() => {
+                    calculateEditPrice();
+                }, 600);
+            }
+
+            // 방문경로 체크박스 생성 함수
+            function generateVisitPathCheckboxes(selectedPaths = []) {
+                console.log('🔍 방문경로 체크박스 생성 시작');
+                console.log('🔍 선택된 경로:', selectedPaths);
+                
+                const container = document.getElementById('editVisitPaths');
+                if (!container) {
+                    console.error('❌ editVisitPaths 컨테이너를 찾을 수 없습니다!');
+                    return;
+                }
+                
+                const visitPathOptions = [
+                    '지인추천', '포털검색', '기타', '블로그',
+                    '지나가다가(간판)', '전단지', 'SNS홍보', '유튜브 영상',
+                    '족자 게시물', '네이버예약', '바닥스티커', '현수막 광고',
+                    '당근마켓 광고', '서울성장드림바우처', '청년수당', '알 수 없음'
+                ];
+                
+                // selectedPaths 정리 (따옴표나 대괄호 제거)
+                const cleanSelectedPaths = selectedPaths.map(path => {
+                    if (typeof path === 'string') {
+                        return path.replace(/^["'\[\]]+|["'\[\]]+$/g, '').trim();
+                    }
+                    return path;
+                }).filter(path => path && path.length > 0);
+                
+                console.log('🔧 정리된 선택된 경로:', cleanSelectedPaths);
+                
+                let html = '';
+                for (let i = 0; i < visitPathOptions.length; i += 4) {
+                    html += '<div class="form-row">';
+                    for (let j = 0; j < 4 && (i + j) < visitPathOptions.length; j++) {
+                        const option = visitPathOptions[i + j];
+                        const isChecked = cleanSelectedPaths.includes(option);
+                        console.log(`🔍 ${option}: ${isChecked ? '체크됨' : '체크 안됨'}`);
+                        html += `
+                            <div class="form-col-3">
+                                <label class="form-check">
+                                    <input type="checkbox" class="form-check-input" value="${option}" ${isChecked ? 'checked' : ''}>
+                                    <span class="form-check-label">${option}</span>
+                                </label>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                }
+                container.innerHTML = html;
+                console.log('✅ 방문경로 체크박스 생성 완료');
+                
+                // 생성된 체크박스 확인 및 직접 체크 (더 강력하게)
+                setTimeout(() => {
+                    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                    console.log('🔍 생성된 체크박스 개수:', checkboxes.length);
+                    checkboxes.forEach((checkbox, index) => {
+                        const shouldBeChecked = cleanSelectedPaths.includes(checkbox.value);
+                        checkbox.checked = shouldBeChecked;
+                        console.log(`🔍 체크박스 ${index + 1}: ${checkbox.value} - ${shouldBeChecked ? '체크됨' : '체크 안됨'}`);
+                    });
+                    
+                    // 한 번 더 강제로 체크 (혹시 모를 경우)
+                    setTimeout(() => {
+                        checkboxes.forEach(checkbox => {
+                            const shouldBeChecked = cleanSelectedPaths.includes(checkbox.value);
+                            if (shouldBeChecked && !checkbox.checked) {
+                                checkbox.checked = true;
+                                console.log(`🔧 강제 체크: ${checkbox.value}`);
+                            }
+                        });
+                    }, 50);
+                }, 100);
+            }
+
+            // 수정 폼용 생년월일 Select Box 초기화
+            function initializeEditBirthDateSelects() {
+                var birthYear = document.getElementById('editBirthYear');
+                var birthMonth = document.getElementById('editBirthMonth');
+                var birthDay = document.getElementById('editBirthDay');
+
+                // 년도 옵션 생성 (1950년 ~ 현재년도)
+                if (birthYear) {
+                    var currentYear = new Date().getFullYear();
+                    for (var year = currentYear; year >= 1950; year--) {
+                        var option = document.createElement('option');
+                        option.value = year;
+                        option.textContent = year + '년';
+                        birthYear.appendChild(option);
+                    }
+                }
+
+                // 월 옵션 생성
+                if (birthMonth) {
+                    for (var month = 1; month <= 12; month++) {
+                        var option = document.createElement('option');
+                        option.value = month;
+                        option.textContent = month + '월';
+                        birthMonth.appendChild(option);
+                    }
+                }
+
+                // 일 옵션 생성 (1일 ~ 31일)
+                if (birthDay) {
+                    for (var day = 1; day <= 31; day++) {
+                        var option = document.createElement('option');
+                        option.value = day;
+                        option.textContent = day + '일';
+                        birthDay.appendChild(option);
+                    }
+                }
+            }
+
+            // 수정 폼용 목록 로드 함수
+            function loadEditLists() {
+                // 상품 목록 로드
+                loadListFromServer('products').then(data => {
+                    const productSelect = document.getElementById('editProductSelect');
+                    if (productSelect) {
+                        // 기존 옵션 제거 (첫 번째 옵션 제외)
+                        while (productSelect.children.length > 1) {
+                            productSelect.removeChild(productSelect.lastChild);
+                        }
+                        
+                        // 새 목록 추가
+                        data.forEach(function(product) {
+                            var option = document.createElement('option');
+                            option.value = product.name;
+                            option.textContent = product.name + ' (' + product.price.toLocaleString() + '원) - ' + product.displayText;
+                            option.setAttribute('data-price', product.price);
+                            option.setAttribute('data-period', product.period);
+                            option.setAttribute('data-hours', product.hours);
+                            option.setAttribute('data-display-text', product.displayText);
+                            productSelect.appendChild(option);
+                        });
+                    }
+                });
+                
+                // 할인 목록 로드
+                loadListFromServer('discounts').then(data => {
+                    const discountSelect = document.getElementById('editDiscountSelect');
+                    if (discountSelect) {
+                        // 기존 옵션 제거 (첫 번째 옵션 제외)
+                        while (discountSelect.children.length > 1) {
+                            discountSelect.removeChild(discountSelect.lastChild);
+                        }
+                        
+                        // 새 목록 추가
+                        data.forEach(function(discount) {
+                            var option = document.createElement('option');
+                            option.value = discount.name;
+                            option.textContent = discount.name + ' (' + discount.rate + '%)';
+                            option.setAttribute('data-rate', discount.rate);
+                            discountSelect.appendChild(option);
+                        });
+                    }
+                });
+                
+                // 기타결제 목록 로드
+                loadListFromServer('payments').then(data => {
+                    const otherPaymentSelect = document.getElementById('editOtherPaymentSelect');
+                    if (otherPaymentSelect) {
+                        // 기존 옵션 제거 (첫 번째 옵션 제외)
+                        while (otherPaymentSelect.children.length > 1) {
+                            otherPaymentSelect.removeChild(otherPaymentSelect.lastChild);
+                        }
+                        
+                        // 새 목록 추가
+                        data.forEach(function(payment) {
+                            var option = document.createElement('option');
+                            option.value = payment;
+                            option.textContent = payment;
+                            otherPaymentSelect.appendChild(option);
+                        });
+                    }
+                });
+            }
+
+            // 수정 폼 이벤트 리스너 설정
+            function setupEditFormEventListeners() {
+                // 상품 선택 변경 시 가격 계산
+                const editProductSelect = document.getElementById('editProductSelect');
+                if (editProductSelect) {
+                    editProductSelect.addEventListener('change', calculateEditPrice);
+                }
+
+                // 할인 선택 변경 시 가격 계산
+                const editDiscountSelect = document.getElementById('editDiscountSelect');
+                if (editDiscountSelect) {
+                    editDiscountSelect.addEventListener('change', calculateEditPrice);
+                }
+            }
+
+            // 수정 폼 가격 계산 함수
+            function calculateEditPrice() {
+                var productSelect = document.getElementById('editProductSelect');
+                var discountSelect = document.getElementById('editDiscountSelect');
+                var amountElement = document.getElementById('editAmount');
+
+                if (productSelect && discountSelect && amountElement) {
+                    var selectedProduct = productSelect.options[productSelect.selectedIndex];
+                    var selectedDiscount = discountSelect.options[discountSelect.selectedIndex];
+
+                    if (selectedProduct && selectedProduct.value && selectedProduct.getAttribute('data-price')) {
+                        var originalPrice = parseFloat(selectedProduct.getAttribute('data-price'));
+                        var discountRate = 0;
+
+                        if (selectedDiscount && selectedDiscount.value && selectedDiscount.getAttribute('data-rate')) {
+                            discountRate = parseFloat(selectedDiscount.getAttribute('data-rate'));
+                        }
+
+                        var discountedPrice = originalPrice * (1 - discountRate / 100);
+                        var displayText = selectedProduct.getAttribute('data-display-text');
+                        
+                        // 가격과 상품 정보를 함께 표시
+                        amountElement.innerHTML = Math.round(discountedPrice).toLocaleString() + '원<br><small style="color: #6b7280; font-size: 12px;">' + displayText + '</small>';
+                    } else {
+                        amountElement.textContent = '0원';
+                    }
+                }
+            }
+
+            // 교육 메모 포맷팅 함수
+            function formatEducationMemos(educationMemos) {
+                if (!educationMemos || !Array.isArray(educationMemos) || educationMemos.length === 0) {
+                    return '-';
+                }
+                
+                return educationMemos.map(memo => {
+                    if (memo.date && memo.content) {
+                        // 날짜 형식 변환 (YYYY-MM-DD -> YYYY년 MM월 DD일)
+                        const dateObj = new Date(memo.date);
+                        if (!isNaN(dateObj.getTime())) {
+                            const year = dateObj.getFullYear();
+                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                            const day = String(dateObj.getDate()).padStart(2, '0');
+                            const formattedDate = `${year}년 ${month}월 ${day}일`;
+                            return `${formattedDate}: ${memo.content}`;
+                        } else {
+                            return `${memo.date}: ${memo.content}`;
+                        }
+                    }
+                    return '';
+                }).filter(item => item !== '').join('<br>');
+            }
+
+            // 회원 상세 정보 표시 함수 (기존 함수 유지)
+            function displayMemberDetail(member) {
+                const nameElement = document.getElementById('memberDetailName');
+                const bodyElement = document.getElementById('memberDetailBody');
+                
+                nameElement.textContent = member.name + '님의 상세 정보';
+                
+                const html = `
+                    <div style="display: grid; gap: 20px;">
+                        <!-- 기본 정보 -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">기본 정보</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div><strong>이름:</strong> ${member.name}</div>
+                                <div><strong>성별:</strong> ${member.gender}</div>
+                                <div><strong>생년월일:</strong> ${member.birthYear ? member.birthYear + '년 ' + member.birthMonth + '월 ' + member.birthDay + '일' : '-'}</div>
+                                <div><strong>연락처:</strong> ${member.phone || '-'} (${member.noPhone})</div>
+                                <div><strong>주소:</strong> ${member.address || '-'}</div>
+                                <div><strong>상세주소:</strong> ${member.detailAddress || '-'}</div>
+                                <div><strong>접수일:</strong> ${member.receptionDate}</div>
+                            </div>
+                        </div>
+
+                        <!-- 상품/결제 정보 -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">상품/결제 정보</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div><strong>상품명:</strong> ${member.productName || '-'}</div>
+                                <div><strong>상품 정보:</strong> ${member.productInfo || '-'}</div>
+                                <div><strong>상품 가격:</strong> ${member.productPrice}</div>
+                                <div><strong>결제 형태:</strong> ${member.paymentType}</div>
+                                <div><strong>할인명:</strong> ${member.discountName || '-'}</div>
+                                <div><strong>할인률:</strong> ${member.discountRate}</div>
+                                <div><strong>최종 금액:</strong> ${member.finalAmount}</div>
+                                <div><strong>납부 상태:</strong> ${member.unpaid}</div>
+                                <div><strong>기타결제:</strong> ${member.otherPayment || '-'}</div>
+                            </div>
+                        </div>
+
+                        <!-- 방문경로/연습방법 -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">방문경로/연습방법</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div><strong>방문경로:</strong> ${member.visitPaths || '-'}</div>
+                                <div><strong>연습방법:</strong> ${member.practiceMethod}</div>
+                                <div><strong>연습 메모:</strong> ${member.practiceMemo || '-'}</div>
+                            </div>
+                        </div>
+
+                        <!-- 시험 정보 -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">시험 정보</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div><strong>장내기능 시험:</strong> ${member.indoorTestDate}</div>
+                                <div><strong>도로주행 시험:</strong> ${member.roadTestDate}</div>
+                                <div><strong>시험장:</strong> ${member.testCenter || '-'}</div>
+                                <div><strong>사전상담:</strong> ${member.preConsultation}</div>
+                            </div>
+                        </div>
+
+                        <!-- 합격/상태 정보 -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">합격/상태 정보</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div><strong>필기합격:</strong> ${member.writtenPass}</div>
+                                <div><strong>기능합격:</strong> ${member.functionPass}</div>
+                                <div><strong>주행합격:</strong> ${member.drivingPass}</div>
+                                <div><strong>최종합격:</strong> ${member.finalPass}</div>
+                                <div><strong>환불여부:</strong> ${member.refunded}</div>
+                                <div><strong>기간만료:</strong> ${member.expired}</div>
+                                <div><strong>약관동의:</strong> ${member.termsAgreed}</div>
+                            </div>
+                        </div>
+
+                        <!-- 메모 정보 -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">메모 정보</h3>
+                            <div style="display: grid; gap: 12px;">
+                                <div><strong>기타 메모:</strong> ${member.generalMemo || '-'}</div>
+                                <div><strong>교육 메모:</strong> ${formatEducationMemos(member.education_memos) || '-'}</div>
+                            </div>
+                        </div>
+
+                        <!-- 등록 정보 -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">등록 정보</h3>
+                            <div style="display: grid; gap: 12px;">
+                                <div><strong>등록일시:</strong> ${member.createdAt}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                bodyElement.innerHTML = html;
+            }
+
+            // 회원 상세보기 모달 닫기
+            function closeMemberDetailModal() {
+                const modal = document.getElementById('memberDetailModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.style.visibility = 'hidden';
+                    modal.style.opacity = '0';
+                    modal.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            // 회원 상세보기 모달 이벤트 리스너
+            function setupMemberDetailModal() {
+                const modal = document.getElementById('memberDetailModal');
+                const closeBtn = document.getElementById('memberDetailCloseBtn');
+                const closeIcon = modal ? modal.querySelector('.modal__close') : null;
+                
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', closeMemberDetailModal);
+                }
+                
+                if (closeIcon) {
+                    closeIcon.addEventListener('click', closeMemberDetailModal);
+                }
+                
+                if (modal) {
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            closeMemberDetailModal();
+                        }
+                    });
+                }
+            }
+
+            // 수정 모달 이벤트 리스너 설정
+            function setupMemberEditModal() {
+                const modal = document.getElementById('memberEditModal');
+                const closeBtn = document.getElementById('memberEditCloseBtn');
+                const closeIcon = modal ? modal.querySelector('.modal__close') : null;
+                
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function() {
+                        modal.style.display = 'none';
+                        modal.style.visibility = 'hidden';
+                        modal.style.opacity = '0';
+                        modal.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                }
+                
+                if (closeIcon) {
+                    closeIcon.addEventListener('click', function() {
+                        modal.style.display = 'none';
+                        modal.style.visibility = 'hidden';
+                        modal.style.opacity = '0';
+                        modal.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                }
+                
+                if (modal) {
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            modal.style.display = 'none';
+                            modal.style.visibility = 'hidden';
+                            modal.style.opacity = '0';
+                            modal.classList.remove('active');
+                            document.body.style.overflow = '';
+                        }
+                    });
+                }
+            }
+
+            // 이벤트 리스너 설정
+            setupSelectAllCheckbox();
+            setupDeleteButton();
+            setupMemberDetailModal();
+            setupMemberEditModal();
+
+            // 가격 계산 함수
+            function calculatePrice() {
+                var productSelect = document.getElementById('productSelect');
+                var discountSelect = document.getElementById('discountSelect');
+                var amountElement = document.querySelector('.amount');
+
+                if (productSelect && discountSelect && amountElement) {
+                    var selectedProduct = productSelect.options[productSelect.selectedIndex];
+                    var selectedDiscount = discountSelect.options[discountSelect.selectedIndex];
+
+                    if (selectedProduct && selectedProduct.value && selectedProduct.getAttribute('data-price')) {
+                        var originalPrice = parseFloat(selectedProduct.getAttribute('data-price'));
+                        var discountRate = 0;
+
+                        if (selectedDiscount && selectedDiscount.value && selectedDiscount.getAttribute('data-rate')) {
+                            discountRate = parseFloat(selectedDiscount.getAttribute('data-rate'));
+                        }
+
+                        var discountedPrice = originalPrice * (1 - discountRate / 100);
+                        var displayText = selectedProduct.getAttribute('data-display-text');
+                        
+                        // 가격과 상품 정보를 함께 표시
+                        amountElement.innerHTML = Math.round(discountedPrice).toLocaleString() + '원<br><small style="color: #6b7280; font-size: 12px;">' + displayText + '</small>';
+                    } else {
+                        amountElement.textContent = '0원';
+                    }
+                }
+            }
+
+            // 상품 선택 변경 시 가격 계산
+            if (productSelect) {
+                productSelect.addEventListener('change', calculatePrice);
+            }
+
+            // 할인 선택 변경 시 가격 계산
+            if (discountSelect) {
+                discountSelect.addEventListener('change', calculatePrice);
+            }
+
+            // 시험 체크박스와 날짜 입력 필드 연동
+            var indoorTestCheck = document.getElementById('indoorTestCheck');
+            var indoorTestDate = document.getElementById('indoorTestDate');
+            var roadTestCheck = document.getElementById('roadTestCheck');
+            var roadTestDate = document.getElementById('roadTestDate');
+
+            // 장내기능 시험 체크박스 이벤트
+            if (indoorTestCheck && indoorTestDate) {
+                indoorTestCheck.addEventListener('change', function() {
+                    if (this.checked) {
+                        indoorTestDate.disabled = false;
+                        indoorTestDate.style.opacity = '1';
+                    } else {
+                        indoorTestDate.disabled = true;
+                        indoorTestDate.style.opacity = '0.5';
+                        indoorTestDate.value = '';
+                    }
+                });
+                
+                // 초기 상태 설정
+                indoorTestDate.disabled = true;
+                indoorTestDate.style.opacity = '0.5';
+            }
+
+            // 도로주행 시험 체크박스 이벤트
+            if (roadTestCheck && roadTestDate) {
+                roadTestCheck.addEventListener('change', function() {
+                    if (this.checked) {
+                        roadTestDate.disabled = false;
+                        roadTestDate.style.opacity = '1';
+                    } else {
+                        roadTestDate.disabled = true;
+                        roadTestDate.style.opacity = '0.5';
+                        roadTestDate.value = '';
+                    }
+                });
+                
+                // 초기 상태 설정
+                roadTestDate.disabled = true;
+                roadTestDate.style.opacity = '0.5';
+            }
+
+            // 약관 데이터 저장 배열 (서버에서 불러온 데이터)
+            var savedTerms = [];
+            
+            // 서버에서 약관 목록 불러오기
+            function loadTermsFromServer() {
+                fetch('api/save_terms.php')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        savedTerms = result.terms || [];
+                        console.log('약관 목록 불러오기 성공:', savedTerms);
+                    } else {
+                        console.error('약관 목록 불러오기 실패:', result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('약관 목록 불러오기 오류:', error);
+                });
+            }
+            
+            // 페이지 로드 시 약관 목록 불러오기
+            loadTermsFromServer();
+            
+            // 선택된 약관 내용 가져오기 함수
+            function getSelectedTermsContent() {
+                // 약관보기 모달에서 선택된 약관이 있는지 확인
+                const selectedTerms = document.querySelector('.terms-item.selected');
+                if (selectedTerms) {
+                    const termsId = selectedTerms.getAttribute('data-terms-id');
+                    const terms = savedTerms.find(t => t.id == termsId);
+                    return terms ? terms.content : '';
+                }
+                return '';
+            }
+
+            // 약관 작성 모달 관련
+            var addTermsBtn = document.getElementById('addTermsBtn');
+            var termsModal = document.getElementById('termsModal');
+            var termsCancelBtn = document.getElementById('termsCancelBtn');
+            var termsSaveBtn = document.getElementById('termsSaveBtn');
+            var termsTitle = document.getElementById('termsTitle');
+            var termsContent = document.getElementById('termsContent');
+            var termsDate = document.getElementById('termsDate');
+
+            // 약관 보기 모달 관련
+            var termsViewLink = document.querySelector('a[href="#"]');
+            var termsViewModal = document.getElementById('termsViewModal');
+            var termsViewCloseBtn = document.getElementById('termsViewCloseBtn');
+            var termsList = document.getElementById('termsList');
+
+            // 약관 작성 버튼 클릭
+            if (addTermsBtn) {
+                addTermsBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('약관 작성 버튼 클릭됨!');
+                    
+                    if (termsModal) {
+                        // 현재 날짜를 기본값으로 설정
+                        var today = new Date();
+                        var year = today.getFullYear();
+                        var month = String(today.getMonth() + 1).padStart(2, '0');
+                        var day = String(today.getDate()).padStart(2, '0');
+                        var todayStr = year + '-' + month + '-' + day;
+                        
+                        if (termsDate) {
+                            termsDate.value = todayStr;
+                        }
+                        
+                        // 모든 스타일을 강제로 설정
+                        termsModal.style.cssText = `
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            width: 100vw !important;
+                            height: 100vh !important;
+                            background: rgba(0, 0, 0, 0.7) !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            z-index: 10000 !important;
+                            padding: 20px !important;
+                            box-sizing: border-box !important;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+                        `;
+                        termsModal.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                        console.log('약관 모달 열림');
+                    }
+                });
+            }
+
+            // 약관 모달 닫기 기능
+            function closeTermsModal() {
+                if (termsModal) {
+                    termsModal.style.display = 'none';
+                    termsModal.style.visibility = 'hidden';
+                    termsModal.style.opacity = '0';
+                    termsModal.classList.remove('active');
+                    document.body.style.overflow = '';
+                    
+                    // 폼 초기화
+                    if (termsTitle) termsTitle.value = '';
+                    if (termsContent) termsContent.value = '';
+                    if (termsDate) termsDate.value = '';
+                }
+            }
+
+            // 약관 모달 닫기 버튼들
+            var termsCloseBtn = termsModal ? termsModal.querySelector('.modal__close') : null;
+            
+            if (termsCloseBtn) {
+                termsCloseBtn.addEventListener('click', closeTermsModal);
+            }
+            
+            if (termsCancelBtn) {
+                termsCancelBtn.addEventListener('click', closeTermsModal);
+            }
+
+            // 약관 저장 버튼
+            if (termsSaveBtn) {
+                termsSaveBtn.addEventListener('click', function() {
+                    var title = termsTitle ? termsTitle.value.trim() : '';
+                    var content = termsContent ? termsContent.value.trim() : '';
+                    var date = termsDate ? termsDate.value : '';
+                    
+                    if (!title) {
+                        alert('약관 제목을 입력해주세요.');
+                        return;
+                    }
+                    
+                    if (!content) {
+                        alert('약관 내용을 입력해주세요.');
+                        return;
+                    }
+                    
+                    // 약관 데이터를 서버에 저장
+                    var termsData = {
+                        title: title,
+                        content: content,
+                        date: date
+                    };
+                    
+                    // 서버에 약관 저장
+                    fetch('api/save_terms.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(termsData)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            console.log('약관 저장 성공:', result);
+                            alert('약관이 저장되었습니다.');
+                            closeTermsModal();
+                            // 약관 목록 새로고침
+                            loadTermsFromServer();
+                        } else {
+                            alert('약관 저장 실패: ' + result.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('약관 저장 오류:', error);
+                        alert('약관 저장 중 오류가 발생했습니다.');
+                    });
+                });
+            }
+
+            // 약관 모달 배경 클릭 시 닫기
+            if (termsModal) {
+                termsModal.addEventListener('click', function(e) {
+                    if (e.target === termsModal) {
+                        closeTermsModal();
+                    }
+                });
+            }
+
+            // 약관 보기 링크 클릭 (회원 등록 모달과 회원 정보 모달 모두 처리)
+            var termsViewLink = document.getElementById('termsViewLink');
+            var editTermsViewLink = document.getElementById('editTermsViewLink');
+            
+            console.log('약관보기 링크 찾기:', termsViewLink);
+            console.log('회원 정보 모달 약관보기 링크 찾기:', editTermsViewLink);
+            
+            // 회원 등록 모달의 약관보기 링크
+            if (termsViewLink) {
+                termsViewLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('회원 등록 모달 약관 보기 클릭됨!');
+                    showTermsList();
+                });
+                console.log('회원 등록 모달 약관보기 이벤트 리스너 등록됨');
+            }
+            
+            // 회원 정보 모달의 약관보기 링크
+            if (editTermsViewLink) {
+                editTermsViewLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('회원 정보 모달 약관 보기 클릭됨!');
+                    showTermsList();
+                    
+                    // editTerms 함수를 다시 등록 (회원 정보 모달에서 약관 모달이 열릴 때)
+                    setTimeout(function() {
+                        window.editTerms = function(termsId) {
+                            var terms = savedTerms.find(function(t) { return t.id === termsId; });
+                            if (terms) {
+                                // 약관 보기 모달 닫기
+                                closeTermsViewModal();
+                                
+                                // 약관 작성 모달 열기 (수정 모드)
+                                if (termsTitle) termsTitle.value = terms.title;
+                                if (termsContent) termsContent.value = terms.content;
+                                if (termsDate) termsDate.value = terms.date;
+                                
+                                // 약관 작성 모달 열기
+                                if (termsModal) {
+                                    termsModal.style.cssText = `
+                                        position: fixed !important;
+                                        top: 0 !important;
+                                        left: 0 !important;
+                                        width: 100vw !important;
+                                        height: 100vh !important;
+                                        background: rgba(0, 0, 0, 0.7) !important;
+                                        display: flex !important;
+                                        align-items: center !important;
+                                        justify-content: center !important;
+                                        z-index: 10000 !important;
+                                        padding: 20px !important;
+                                        box-sizing: border-box !important;
+                                        visibility: visible !important;
+                                        opacity: 1 !important;
+                                    `;
+                                    termsModal.classList.add('active');
+                                    document.body.style.overflow = 'hidden';
+                                }
+                            }
+                        };
+                        console.log('editTerms 함수 재등록됨');
+                    }, 100);
+                });
+                console.log('회원 정보 모달 약관보기 이벤트 리스너 등록됨');
+            }
+
+            // 약관 목록 표시 함수
+            function showTermsList() {
+                if (termsViewModal && termsList) {
+                    if (savedTerms.length === 0) {
+                        termsList.innerHTML = `
+                            <div class="no-terms" style="text-align: center; padding: 40px; color: #6b7280;">
+                                <p>저장된 약관이 없습니다.</p>
+                                <p>먼저 약관을 작성해주세요.</p>
+                            </div>
+                        `;
+                    } else {
+                        var termsHtml = '';
+                        savedTerms.forEach(function(terms, index) {
+                            termsHtml += `
+                                <div class="terms-item" data-terms-id="${terms.id}" onclick="selectTerms(${terms.id})">
+                                    <div class="terms-item-header">
+                                        <h3 class="terms-item-title">${terms.title}</h3>
+                                        <span class="terms-item-date">${terms.date}</span>
+                                    </div>
+                                    <div class="terms-item-content">${terms.content}</div>
+                                    <div class="terms-item-actions">
+                                        <button type="button" class="btn btn--add-small edit-terms-btn" data-terms-id="${terms.id}" title="수정">수정</button>
+                                        <button type="button" class="btn btn--remove-small delete-terms-btn" data-terms-id="${terms.id}" title="삭제">삭제</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        termsList.innerHTML = termsHtml;
+                        
+                        // 수정 버튼 이벤트 리스너 추가
+                        var editButtons = termsList.querySelectorAll('.edit-terms-btn');
+                        editButtons.forEach(function(btn) {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                var termsId = parseInt(this.getAttribute('data-terms-id'));
+                                console.log('수정 버튼 클릭됨, 약관 ID:', termsId);
+                                
+                                // 약관 데이터 찾기
+                                console.log('savedTerms 배열:', savedTerms);
+                                console.log('찾고 있는 약관 ID:', termsId, '타입:', typeof termsId);
+                                
+                                var terms = savedTerms.find(function(t) { 
+                                    console.log('비교 중인 약관:', t, 'ID:', t.id, '타입:', typeof t.id);
+                                    return t.id == termsId; // == 사용하여 타입 변환 허용
+                                });
+                                console.log('찾은 약관 데이터:', terms);
+                                
+                                if (terms) {
+                                    // 약관 보기 모달 닫기
+                                    closeTermsViewModal();
+                                    
+                                    // 약관 작성 모달 열기 (수정 모드)
+                                    var termsTitle = document.getElementById('termsTitle');
+                                    var termsContent = document.getElementById('termsContent');
+                                    var termsDate = document.getElementById('termsDate');
+                                    var termsModal = document.getElementById('termsModal');
+                                    
+                                    if (termsTitle) termsTitle.value = terms.title;
+                                    if (termsContent) termsContent.value = terms.content;
+                                    if (termsDate) termsDate.value = terms.date;
+                                    
+                                    console.log('약관 데이터 설정됨:', {
+                                        title: terms.title,
+                                        content: terms.content,
+                                        date: terms.date
+                                    });
+                                    
+                                    // 약관 작성 모달 열기
+                                    if (termsModal) {
+                                        termsModal.style.cssText = `
+                                            position: fixed !important;
+                                            top: 0 !important;
+                                            left: 0 !important;
+                                            width: 100vw !important;
+                                            height: 100vh !important;
+                                            background: rgba(0, 0, 0, 0.7) !important;
+                                            display: flex !important;
+                                            align-items: center !important;
+                                            justify-content: center !important;
+                                            z-index: 10000 !important;
+                                            padding: 20px !important;
+                                            box-sizing: border-box !important;
+                                            visibility: visible !important;
+                                            opacity: 1 !important;
+                                        `;
+                                        termsModal.classList.add('active');
+                                        document.body.style.overflow = 'hidden';
+                                        console.log('약관 작성 모달 열림');
+                                    } else {
+                                        console.error('약관 작성 모달을 찾을 수 없습니다');
+                                    }
+                                } else {
+                                    console.error('약관 데이터를 찾을 수 없습니다, ID:', termsId);
+                                }
+                            });
+                        });
+                        
+                        // 삭제 버튼 이벤트 리스너 추가
+                        var deleteButtons = termsList.querySelectorAll('.delete-terms-btn');
+                        deleteButtons.forEach(function(btn) {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                var termsId = parseInt(this.getAttribute('data-terms-id'));
+                                console.log('삭제 버튼 클릭됨, 약관 ID:', termsId);
+                                deleteTerms(termsId);
+                            });
+                        });
+                    }
+
+                    // 모달 열기
+                    termsViewModal.style.cssText = `
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        background: rgba(0, 0, 0, 0.7) !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        z-index: 10000 !important;
+                        padding: 20px !important;
+                        box-sizing: border-box !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                    `;
+                    termsViewModal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            // 약관 수정 함수
+            window.editTerms = function(termsId) {
+                var terms = savedTerms.find(function(t) { return t.id === termsId; });
+                if (terms) {
+                    // 약관 보기 모달 닫기
+                    closeTermsViewModal();
+                    
+                    // 약관 작성 모달 열기 (수정 모드)
+                    if (termsTitle) termsTitle.value = terms.title;
+                    if (termsContent) termsContent.value = terms.content;
+                    if (termsDate) termsDate.value = terms.date;
+                    
+                    // 약관 작성 모달 열기
+                    if (termsModal) {
+                        termsModal.style.cssText = `
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            width: 100vw !important;
+                            height: 100vh !important;
+                            background: rgba(0, 0, 0, 0.7) !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            z-index: 10000 !important;
+                            padding: 20px !important;
+                            box-sizing: border-box !important;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+                        `;
+                        termsModal.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }
+                }
+            };
+
+            // 약관 선택 함수
+            window.selectTerms = function(termsId) {
+                // 모든 약관 항목에서 selected 클래스 제거
+                document.querySelectorAll('.terms-item').forEach(item => {
+                    item.classList.remove('selected');
+                    item.style.borderColor = '#e5e7eb';
+                    item.style.backgroundColor = '#f9fafb';
+                });
+                
+                // 선택된 약관에 selected 클래스 추가
+                const selectedItem = document.querySelector(`[data-terms-id="${termsId}"]`);
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                    selectedItem.style.borderColor = '#3b82f6';
+                    selectedItem.style.backgroundColor = '#eff6ff';
+                }
+                
+                console.log('약관 선택됨:', termsId);
+            };
+            
+            // 약관 삭제 함수
+            window.deleteTerms = function(termsId) {
+                if (confirm('이 약관을 삭제하시겠습니까?')) {
+                    // 서버에서 약관 삭제
+                    fetch('api/save_terms.php', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ id: termsId })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert('약관이 삭제되었습니다.');
+                            loadTermsFromServer(); // 목록 새로고침
+                        } else {
+                            alert('약관 삭제 실패: ' + result.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('약관 삭제 오류:', error);
+                        alert('약관 삭제 중 오류가 발생했습니다.');
+                    });
+                }
+            };
+
+            // 약관 보기 모달 닫기 기능
+            function closeTermsViewModal() {
+                if (termsViewModal) {
+                    termsViewModal.style.display = 'none';
+                    termsViewModal.style.visibility = 'hidden';
+                    termsViewModal.style.opacity = '0';
+                    termsViewModal.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            // 약관 보기 모달 닫기 버튼들
+            var termsViewCloseBtn2 = termsViewModal ? termsViewModal.querySelector('.modal__close') : null;
+            
+            if (termsViewCloseBtn) {
+                termsViewCloseBtn.addEventListener('click', closeTermsViewModal);
+            }
+            
+            if (termsViewCloseBtn2) {
+                termsViewCloseBtn2.addEventListener('click', closeTermsViewModal);
+            }
+
+            // 약관 보기 모달 배경 클릭 시 닫기
+            if (termsViewModal) {
+                termsViewModal.addEventListener('click', function(e) {
+                    if (e.target === termsViewModal) {
+                        closeTermsViewModal();
+                    }
+                });
+            }
+
+            // 교육 및 메모사항 동적 추가 기능
+            var addMemoBtn = document.getElementById('addMemoBtn');
+            var memoContainer = document.getElementById('memoContainer');
+            var memoCounter = 0; // 메모 항목 번호
+
+            if (addMemoBtn && memoContainer) {
+                addMemoBtn.addEventListener('click', function() {
+                    memoCounter++;
+                    
+                    // 메모 항목 HTML 생성
+                    var memoItem = document.createElement('div');
+                    memoItem.className = 'memo-item';
+                    memoItem.setAttribute('data-memo-id', memoCounter);
+                    
+                    memoItem.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <label style="font-weight: 600; color: #374151; margin: 0;">메모 ${memoCounter}</label>
+                            <div style="display: flex; gap: 6px; margin-left: auto;">
+                                <button type="button" class="btn btn--add-small" onclick="saveMemo(${memoCounter})" title="메모 저장" id="saveBtn_${memoCounter}" style="min-width: 60px; height: 32px; font-size: 12px; font-weight: 500; white-space: nowrap;">저장</button>
+                                <button type="button" class="btn btn--add-small" onclick="editMemo(${memoCounter})" title="메모 수정" id="editBtn_${memoCounter}" style="display: none; background: #3b82f6; border-color: #3b82f6; min-width: 60px; height: 32px; font-size: 12px; font-weight: 500; white-space: nowrap;">수정</button>
+                                <button type="button" class="btn btn--remove-small" onclick="removeMemo(${memoCounter})" title="메모 삭제" style="width: 32px; height: 32px;">-</button>
+                            </div>
+                        </div>
+                        <textarea class="form-control" id="memoText_${memoCounter}" placeholder="교육 및 메모사항을 입력해주세요." rows="3" style="margin-bottom: 12px;"></textarea>
+                        <div id="memoStatus_${memoCounter}" style="font-size: 12px; color: #6b7280; margin-top: 4px; display: none;">
+                            <span class="memo-status-text">저장되지 않음</span>
+                        </div>
+                    `;
+                    
+                    // 컨테이너에 추가
+                    memoContainer.appendChild(memoItem);
+                    
+                    console.log('메모 항목 추가됨:', memoCounter);
+                });
+            }
+
+            // 메모 저장 함수 (전역 함수로 등록)
+            window.saveMemo = function(memoId) {
+                var memoTextarea = document.getElementById(`memoText_${memoId}`);
+                var memoStatus = document.getElementById(`memoStatus_${memoId}`);
+                var statusText = memoStatus ? memoStatus.querySelector('.memo-status-text') : null;
+                var saveBtn = document.getElementById(`saveBtn_${memoId}`);
+                var editBtn = document.getElementById(`editBtn_${memoId}`);
+                
+                if (memoTextarea && memoStatus && statusText && saveBtn && editBtn) {
+                    var content = memoTextarea.value.trim();
+                    
+                    if (!content) {
+                        alert('메모 내용을 입력해주세요.');
+                        return;
+                    }
+                    
+                    // 저장 상태 표시
+                    memoStatus.style.display = 'block';
+                    statusText.textContent = '저장됨';
+                    statusText.style.color = '#10b981';
+                    
+                    // 저장 시간 추가
+                    var now = new Date();
+                    var timeString = now.toLocaleTimeString('ko-KR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    statusText.textContent = `저장됨 (${timeString})`;
+                    
+                    // 텍스트 영역 비활성화 (저장 후)
+                    memoTextarea.disabled = true;
+                    memoTextarea.style.backgroundColor = '#f3f4f6';
+                    memoTextarea.style.color = '#6b7280';
+                    
+                    // 버튼 상태 변경
+                    saveBtn.style.display = 'none';
+                    editBtn.style.display = 'inline-flex';
+                    
+                    console.log('메모 저장됨:', memoId, content);
+                }
+            };
+
+            // 메모 수정 함수 (전역 함수로 등록)
+            window.editMemo = function(memoId) {
+                var memoTextarea = document.getElementById(`memoText_${memoId}`);
+                var memoStatus = document.getElementById(`memoStatus_${memoId}`);
+                var statusText = memoStatus ? memoStatus.querySelector('.memo-status-text') : null;
+                var saveBtn = document.getElementById(`saveBtn_${memoId}`);
+                var editBtn = document.getElementById(`editBtn_${memoId}`);
+                
+                if (memoTextarea && memoStatus && statusText && saveBtn && editBtn) {
+                    // 텍스트 영역 활성화
+                    memoTextarea.disabled = false;
+                    memoTextarea.style.backgroundColor = '#fff';
+                    memoTextarea.style.color = '#495057';
+                    
+                    // 상태 표시
+                    memoStatus.style.display = 'block';
+                    statusText.textContent = '수정 중...';
+                    statusText.style.color = '#f59e0b';
+                    
+                    // 버튼 상태 변경
+                    saveBtn.style.display = 'inline-flex';
+                    editBtn.style.display = 'none';
+                    
+                    console.log('메모 수정 모드:', memoId);
+                }
+            };
+
+            // 메모 삭제 함수 (전역 함수로 등록)
+            window.removeMemo = function(memoId) {
+                if (confirm('이 메모를 삭제하시겠습니까?')) {
+                    var memoItem = document.querySelector(`[data-memo-id="${memoId}"]`);
+                    if (memoItem) {
+                        memoItem.remove();
+                        console.log('메모 항목 삭제됨:', memoId);
+                    }
+                }
+            };
+
+            // 회원 정보 수정 완료 함수
+            window.updateMemberForm = function() {
+                console.log('🔧 회원 정보 수정 시작');
+                
+                // 현재 회원 ID 가져오기 (모달에서)
+                const modal = document.getElementById('memberEditModal');
+                const memberId = modal?.getAttribute('data-member-id') || '1';
+                
+                // 폼 데이터 수집
+                var formData = {
+                    // 기본 정보
+                    branch: '응암역점',
+                    name: document.getElementById('editName')?.value || '',
+                    gender: document.querySelector('input[name="editGender"]:checked')?.value || 'male',
+                    birthYear: parseInt(document.getElementById('editBirthYear')?.value) || null,
+                    birthMonth: parseInt(document.getElementById('editBirthMonth')?.value) || null,
+                    birthDay: parseInt(document.getElementById('editBirthDay')?.value) || null,
+                    address: document.getElementById('editAddress')?.value || '',
+                    detailAddress: document.getElementById('editDetailAddress')?.value || '',
+                    phone: document.getElementById('editPhone')?.value || '',
+                    noPhone: document.getElementById('editNoPhone')?.checked || false,
+                    receptionDate: document.getElementById('editPaymentDate')?.value || null,
+                    
+                    // 상품/결제 정보
+                    productName: document.getElementById('editProductSelect')?.selectedOptions[0]?.textContent?.split(' (')[0] || '',
+                    productPrice: parseFloat(document.getElementById('editProductSelect')?.selectedOptions[0]?.getAttribute('data-price') || 0),
+                    productPeriod: parseInt(document.getElementById('editProductSelect')?.selectedOptions[0]?.getAttribute('data-period') || 0),
+                    productHours: parseInt(document.getElementById('editProductSelect')?.selectedOptions[0]?.getAttribute('data-hours') || 0),
+                    paymentType: document.getElementById('editPaymentTypeSelect')?.value || '',
+                    discountName: document.getElementById('editDiscountSelect')?.selectedOptions[0]?.textContent?.split(' (')[0] || '',
+                    discountRate: parseFloat(document.getElementById('editDiscountSelect')?.selectedOptions[0]?.getAttribute('data-rate') || 0),
+                    finalAmount: parseFloat(document.querySelector('#editAmount')?.textContent?.replace(/[^0-9]/g, '') || 0),
+                    unpaid: document.getElementById('editUnpaid')?.checked || false,
+                    
+                    // 기타결제
+                    otherPayment: document.getElementById('editOtherPaymentSelect')?.value || '',
+                    
+                    // 방문경로 (체크된 항목들)
+                    visitPaths: Array.from(document.querySelectorAll('#editVisitPaths input[type="checkbox"]:checked'))
+                        .map(cb => cb.nextElementSibling?.textContent)
+                        .filter(text => text),
+                    
+                    
+                    // 연습방법
+                    practiceMethod: document.querySelector('input[name="editPractice"]:checked')?.value || 'first',
+                    practiceMemo: document.getElementById('editPracticeMemo')?.value || '',
+                    
+                    // 시험 정보
+                    indoorTestDate: document.getElementById('editIndoorTestDate')?.value || null,
+                    roadTestDate: document.getElementById('editRoadTestDate')?.value || null,
+                    testCenter: document.getElementById('editTestCenter')?.value || '',
+                    
+                    // 상담/합격 정보
+                    preConsultation: document.getElementById('editPreConsultation')?.checked || false,
+                    writtenPass: document.getElementById('editWrittenPass')?.checked || false,
+                    functionPass: document.getElementById('editFunctionPass')?.checked || false,
+                    drivingPass: document.getElementById('editDrivingPass')?.checked || false,
+                    finalPass: document.getElementById('editFinalPass')?.checked || false,
+                    
+                    // 회원상태
+                    refunded: document.getElementById('editRefunded')?.checked || false,
+                    expired: document.getElementById('editExpired')?.checked || false,
+                    
+                    // 약관
+                    termsAgreed: document.getElementById('editTermsAgreed')?.checked || false,
+                    
+                    // 메모
+                    generalMemo: document.getElementById('editGeneralMemo')?.value || '',
+                    educationMemos: Array.from(document.querySelectorAll('#editMemoContainer textarea'))
+                        .map(ta => ta.value)
+                        .filter(value => value.trim() !== '')
+                };
+                
+                // 필수 필드 검증
+                if (!formData.name) {
+                    alert('이름을 입력해주세요.');
+                    return;
+                }
+                
+                console.log('🔧 수정할 데이터:', formData);
+                console.log('🔧 회원 ID:', memberId);
+                
+                // 서버에 수정 요청 전송 (완전한 수정 API 사용)
+                fetch('api/complete_update.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: memberId,
+                        ...formData
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    console.log('🔧 수정 응답:', result);
+                    if (result.success) {
+                        alert('회원 정보가 성공적으로 수정되었습니다.');
+                        
+                        // 모달 닫기
+                        modal.style.display = 'none';
+                        modal.style.visibility = 'hidden';
+                        modal.style.opacity = '0';
+                        modal.classList.remove('active');
+                        document.body.style.overflow = '';
+                        
+                        // 회원 목록 강제 새로고침 (여러 번)
+                        setTimeout(() => {
+                            loadMembers();
+                        }, 100);
+                        setTimeout(() => {
+                            loadMembers();
+                        }, 500);
+                        setTimeout(() => {
+                            loadMembers();
+                        }, 1000);
+                    } else {
+                        alert('회원 정보 수정 실패: ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('🔧 수정 오류:', error);
+                    alert('회원 정보 수정 중 오류가 발생했습니다: ' + error.message);
+                });
+            };
+
+            // 폼 데이터 수집 및 서버 전송 함수
+            window.submitMemberForm = function() {
+                // 폼 데이터 수집
+                var formData = {
+                    // 기본 정보
+                    branch: '응암역점',
+                    name: document.querySelector('input[placeholder="이름을 입력해주세요"]')?.value || '',
+                    gender: document.querySelector('input[name="gender"]:checked')?.value || 'male',
+                    birthYear: parseInt(document.getElementById('birthYear')?.value) || null,
+                    birthMonth: parseInt(document.getElementById('birthMonth')?.value) || null,
+                    birthDay: parseInt(document.getElementById('birthDay')?.value) || null,
+                    address: document.querySelector('input[placeholder="주소를 입력해주세요"]')?.value || '',
+                    detailAddress: document.querySelector('input[placeholder="상세주소를 입력해주세요"]')?.value || '',
+                    phone: document.querySelector('input[value="01012341234"]')?.value || '',
+                    noPhone: document.querySelector('input[type="checkbox"]')?.checked || false,
+                    receptionDate: document.getElementById('paymentDate')?.value || null,
+                    
+                    // 상품/결제 정보
+                    productName: document.getElementById('productSelect')?.selectedOptions[0]?.textContent?.split(' (')[0] || '',
+                    productPrice: parseFloat(document.getElementById('productSelect')?.selectedOptions[0]?.getAttribute('data-price') || 0),
+                    productPeriod: parseInt(document.getElementById('productSelect')?.selectedOptions[0]?.getAttribute('data-period') || 0),
+                    productHours: parseInt(document.getElementById('productSelect')?.selectedOptions[0]?.getAttribute('data-hours') || 0),
+                    paymentType: document.getElementById('paymentTypeSelect')?.value || '',
+                    discountName: document.getElementById('discountSelect')?.selectedOptions[0]?.textContent?.split(' (')[0] || '',
+                    discountRate: parseFloat(document.getElementById('discountSelect')?.selectedOptions[0]?.getAttribute('data-rate') || 0),
+                    finalAmount: parseFloat(document.querySelector('.amount')?.textContent?.replace(/[^0-9]/g, '') || 0),
+                    unpaid: document.querySelector('input[type="checkbox"][checked]')?.checked || false,
+                    
+                    // 기타결제
+                    otherPayment: document.getElementById('otherPaymentSelect')?.value || '',
+                    
+                    // 방문경로 (체크된 항목들)
+                    visitPaths: Array.from(document.querySelectorAll('.checkbox-grid input[type="checkbox"]:checked'))
+                        .map(cb => cb.nextElementSibling?.textContent)
+                        .filter(text => text),
+                    
+                    
+                    // 연습방법
+                    practiceMethod: document.querySelector('input[name="practice"]:checked')?.value || 'first',
+                    practiceMemo: document.querySelector('input[placeholder="타 학원 또는 기타 사항을 메모해두세요"]')?.value || '',
+                    
+                    // 시험 정보
+                    indoorTestDate: document.getElementById('indoorTestDate')?.value || null,
+                    roadTestDate: document.getElementById('roadTestDate')?.value || null,
+                    testCenter: document.querySelector('input[placeholder="시험장을 입력해주세요"]')?.value || '',
+                    
+                    // 상담/합격 정보
+                    preConsultation: document.getElementById('preConsultation')?.checked || false,
+                    writtenPass: document.getElementById('writtenPass')?.checked || false,
+                    functionPass: document.getElementById('functionPass')?.checked || false,
+                    drivingPass: document.getElementById('drivingPass')?.checked || false,
+                    finalPass: document.getElementById('finalPass')?.checked || false,
+                    
+                    // 회원상태
+                    refunded: document.getElementById('refunded')?.checked || false,
+                    expired: document.getElementById('expired')?.checked || false,
+                    
+                    // 약관
+                    termsAgreed: document.getElementById('termsAgreed')?.checked || false,
+                    termsContent: getSelectedTermsContent(),
+                    
+                    // 메모
+                    generalMemo: document.getElementById('generalMemo')?.value || '',
+                    educationMemos: Array.from(document.querySelectorAll('.memo-item textarea'))
+                        .map(ta => ta.value)
+                        .filter(value => value.trim() !== '')
+                };
+                
+                // 필수 필드 검증
+                if (!formData.name) {
+                    alert('이름을 입력해주세요.');
+                    return;
+                }
+                
+                if (!formData.productName) {
+                    alert('상품을 선택해주세요.');
+                    return;
+                }
+                
+                console.log('전송할 데이터:', formData);
+                console.log('데이터 필드 수:', Object.keys(formData).length);
+                console.log('데이터 상세:', JSON.stringify(formData, null, 2));
+                
+                // 완전한 회원 등록 API
+                return fetch('api/members_complete_new.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('회원 등록 성공:', data);
+                            alert('회원이 성공적으로 등록되었습니다.');
+                            
+                            // 모달 닫기
+                            var modal = document.getElementById('memberModal');
+                            if (modal) {
+                                modal.style.display = 'none';
+                                modal.style.visibility = 'hidden';
+                                modal.style.opacity = '0';
+                                modal.classList.remove('active');
+                                document.body.style.overflow = '';
+                            }
+                            
+                            // 폼 초기화
+                            document.querySelector('.member-form').reset();
+                            
+                            // 회원 목록 새로고침
+                            loadMembers();
+                        })
+                        .catch(error => {
+                            console.error('회원 등록 실패:', error);
+                            alert('회원 등록 중 오류가 발생했습니다: ' + error.message);
+                        });
+            };
+        });
+    </script>
+    </body>
+</html>
+
+
